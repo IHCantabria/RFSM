@@ -1,6 +1,6 @@
 *.pyc
-tests*
-exe*
+tests/*
+exe/*
 RFSM.egg-info*
 RFSM_python/.ipynb_checkpoints*
 RFSM_python/__pycache__*
