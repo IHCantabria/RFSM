@@ -19,8 +19,7 @@ Ejecutaremos las siguientes líneas:
 ```python
 conda create --name RFSM
 conda activate RFSM
-conda install -c conda-forge geopandas
-conda install -c conda-forge gdal
+conda install -c conda-forge geopandas gdal rasterstats
 ```
 
 Una vez descargado, desde la terminal iremos al directorio donde se sencuentra __setup.py__ y ejecutaremos la siguiente linea:
