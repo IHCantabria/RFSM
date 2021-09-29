@@ -44,8 +44,9 @@ def close_holes(poly):
         return poly
         
 def extract_coastline(shp_coastline,path_DTM,path_DTM_new, cellsize):
-    drv = gdal.Open(DTM)
-    OutTile = gdal.Warp(path_DTM_new[:-3]+'tif',
+    gdal.SetConfigOption("GDALWARP_IGNORE_BAD_CUTLINE", "YES")
+    drv = gdal.Open(path_DTM)
+    OutTile = gdal.Warp(path_DTM_new,
                         [drv], 
                         format = 'GTiff',
                         xRes = cellsize, 
@@ -55,9 +56,6 @@ def extract_coastline(shp_coastline,path_DTM,path_DTM_new, cellsize):
                         dstNodata = -9999)
 
     OutTile = None 
-    ds = gdal.Open(path_DTM_new[:-3]+'tif')
-    ds_out = gdal.Translate(path_DTM_new,ds,format='AAIGrid')
-    ds_out = None
 
 def getWKT_PRJ (epsg_code):
     
@@ -89,40 +87,47 @@ def rasterToASCII(filename, data, xmin, ymin, cellsize, nodata, header=True,type
                     fid.write("{:d} ".format(int(nodata)))
             fid.write("\n")
 
-def line_cost_raster(raster,path_output,n_types=True):
-    raster=np.flipud(np.loadtxt(raster,skiprows=6))
-    [ncols,nrows,xllcorner,yllcorner,cellsize,NODATA_value] = header_ascii(DTM)
-    contour = raster.copy()*0
-    if n_types==True:
-        t=1
-        for c in range(ncols):
-            for r in range(nrows):
-                try:
-                    if raster[r,c]==-9999:
-                        continue
-                    else:
-                        if ((raster[r,c-1])==-9999 or (raster[r,c+1])==-9999 or (raster[r+1,c]==-9999)):
-                            contour[r,c]=t
-                            t=t+1
-                        elif raster[r,c-1]==-9999:
-                            contour[r,c]=0
-                except:
-                    continue
-        rasterToASCII(path_output+'coast.asc', contour, xllcorner, yllcorner+0.5, cellsize, NODATA_value, header=True,type_data='integer') 
-    else:
-        for c in range(ncols):
-            for r in range(nrows):
-                try:
-                    if raster[r,c]==-9999:
-                        continue
-                    else:
-                        if ((raster[r,c-1])==-9999 or (raster[r,c+1])==-9999 or (raster[r+1,c]==-9999)):
-                            contour[r,c]=1
-                        elif raster[r,c-1]==-9999:
-                            contour[r,c]=0
-                except:
-                    continue
-        rasterToASCII(path_output+'coast_Line.asc', contour, xllcorner, yllcorner+0.5, cellsize, NODATA_value, header=True,type_data='integer')                
+def line_cost_raster(raster_file,path_output):
+    raster = gdal.Open(raster_file)
+    band = raster.GetRasterBand(1)
+    data = BandReadAsArray(band)
+    data[data>=0]= 1
+    data[data<0]= 0
+
+    from skimage.segmentation import find_boundaries
+    data_2 = data.copy()*0+-9999
+    data_2[find_boundaries(data,mode ='inner')]=1
+
+    driver = gdal.GetDriverByName("GTiff")
+    dsOut = driver.Create(path_output+'coast_line.tif'
+                      ,raster.RasterXSize, raster.RasterYSize, 1, band.DataType)
+    CopyDatasetInfo(raster,dsOut)
+    bandOut=dsOut.GetRasterBand(1)
+    bandOut.Fill(-9999)
+    bandOut.SetNoDataValue(-9999)
+    BandWriteArray(bandOut, data_2)
+
+    bandOut = None
+    dsOut = None
+    
+    pos = np.where(data_2==1)
+    t = 0
+    for i in range(len(pos[0])):
+        data_2[pos[0][i],pos[1][i]] = t
+        t= t+1
+    driver = gdal.GetDriverByName("GTiff")
+    dsOut = driver.Create(path_output+'coast.tif'
+                      ,raster.RasterXSize, raster.RasterYSize, 1, band.DataType)
+    CopyDatasetInfo(raster,dsOut)
+    bandOut=dsOut.GetRasterBand(1)
+    bandOut.Fill(-9999)
+    bandOut.SetNoDataValue(-9999)
+    BandWriteArray(bandOut, data_2)
+
+    band = None
+    raster = None
+    bandOut = None
+    dsOut = None       
 
 def convert_line_to_shp(shape_line, output):
     # Now convert it to a shapefile with OGR    
@@ -451,6 +456,24 @@ def preprocess_RFSM(DTM,CoastLine,path_project,epsg_n):
     epsg = getWKT_PRJ(epsg_n)
     prj.write(epsg)
     prj.close()
+    
+from shapely.geometry.polygon import Polygon
+from shapely.geometry.multipolygon import MultiPolygon
+
+def explode(indata):
+    indf = gpd.GeoDataFrame.from_file(indata)
+    outdf = gpd.GeoDataFrame(columns=indf.columns)
+    for idx, row in indf.iterrows():
+        if type(row.geometry) == Polygon:
+            outdf = outdf.append(row,ignore_index=True)
+        if type(row.geometry) == MultiPolygon:
+            multdf = gpd.GeoDataFrame(columns=indf.columns)
+            recs = len(row.geometry)
+            multdf = multdf.append([row]*recs,ignore_index=True)
+            for geom in range(recs):
+                multdf.loc[geom,'geometry'] = row.geometry[geom]
+            outdf = outdf.append(multdf,ignore_index=True)
+    return outdf
 
 def impact_zones_process(path_project,DTM_LC,cellsize,new_coast_Line=True):
     start = time.time()
@@ -481,11 +504,8 @@ def impact_zones_process(path_project,DTM_LC,cellsize,new_coast_Line=True):
         bandOut = None
         dsOut = None
         
-        #dtm = np.loadtxt(DTM_LC,skiprows=6)
-        
-        #rasterToASCII(path_project+'ascii/DTM_OC.asc', np.flipud(dtm), xllcorner, yllcorner, cellsize, NODATA_value, header=True,type_data='float')
-
         os.system('gdal_polygonize.py '+path_project+'ascii/DTM_OC.tif'+' '+path_project+'shp/DTM_OC.shp -b 1 -f "ESRI Shapefile" DTM_OC IZID')
+        
     
     
     os.system('gdal_polygonize.py '+izd1_r+' '+path_project+'shp/izid1.shp -b 1 -f "ESRI Shapefile" izid1 IZID')
@@ -516,17 +536,8 @@ def impact_zones_process(path_project,DTM_LC,cellsize,new_coast_Line=True):
     extract_coastline(path_project+'shp/Final_cut_complet_F.shp',DTM_LC,path_project+'ascii/DTM_LC_2.tif', cellsize)
         
     line_cost_raster(path_project+'ascii/DTM_LC_2.tif',path_project+'ascii/')
-    #line_cost_raster(path_project+'ascii/DTM_LC_2.tif',path_project+'ascii/',n_types=False)
     os.system('gdal_polygonize.py '+path_project+'ascii/coast.tif'+' '+path_project+'shp/coast_IH.shp -b 1 -f "ESRI Shapefile" coast_IH CID')
-    
-#     shapefile = gpd.read_file(path_project+'shp/coast_IH.shp' )
-#     shapefile=shapefile[shapefile.CID==1]
-#     pol = shapefile['geometry']
-    
-    # from shapely.ops import cascaded_union
-    # u = cascaded_union(pol)
-    # convert_polygon_to_shp(u,path_project+'shp/coast_IH.shp')
-    
+      
     
     ds = ogr.Open(path_project+'shp/coast_IH.shp')
     ly = ds.ExecuteSQL('SELECT ST_Centroid(geometry), * FROM coast_IH', dialect='sqlite')
@@ -548,7 +559,6 @@ def impact_zones_process(path_project,DTM_LC,cellsize,new_coast_Line=True):
     
     izcoast=Table_impact_zone.loc[fc_intersect,:].loc[:,[' NbCells',' MinLevel',' MidX',' MidY']].copy()
     izcoast.columns=['nCells','minH','MidX','MidY']
-    #ZE = zonal_statistic(izd2_r,path_project+'ascii/coast_Line.tif',statis='sum',only_values=izcoast.index)
     ZE = zonal_stats(path_project+'shp/izcoast.shp',
                      path_project+'ascii/coast_Line.tif', 
                      stats=['sum'],
@@ -563,20 +573,11 @@ def impact_zones_process(path_project,DTM_LC,cellsize,new_coast_Line=True):
     izcoast.to_csv(path_project+'ascii/izcoast.csv')
     return Table_impact_zone, izcoast
 
-def izcoast_modify(izcoast_shp,Table_impact_zone,output):
+def izcoast_modify(path_project,izcoast_shp,izcoast_table,output):
+    izcoast_table_=pd.read_csv(izcoast_table,index_col=0)
     iz_shp=gpd.read_file(izcoast_shp)
-    izcoast=Table_impact_zone.loc[iz_shp.loc[:,'IZID'].values,:].loc[:,[' NbCells',' MinLevel',' MidX',' MidY']].copy()
-    izcoast.columns=['nCells','minH','MidX','MidY']
-    #ZE = zonal_statistic(izd2_r,path_project+'ascii/coast_Line.tif',statis='sum',only_values=izcoast.index)
-    ZE = zonal_stats(izcoast_shp,
-                     path_project+'ascii/coast_Line.tif', 
-                     stats=['sum'],
-                     geojson_out=True,included_attributes=['IZID'])
-    ZE = json_normalize(ZE)
-    ZE.index = ZE.loc[:,'properties.IZID']
-    ZE = ZE.drop_duplicates(subset='properties.IZID')
-    for i,ii in enumerate(izcoast.index):
-        izcoast.loc[ii,'nCells'] =  ZE.loc[ii,'properties.sum']
+    izcoast=izcoast_table_.loc[iz_shp.loc[:,'IZID'].values,:].copy()
+    
     izcoast.to_csv(output)
     
 def create_file_manning(path_project,raster_rugos,TestDesc,Table_impact_zone):
