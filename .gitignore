@@ -1,6 +1,8 @@
 *.pyc
 tests/*
 exe/*
+doc/*
 RFSM.egg-info*
 RFSM_python/.ipynb_checkpoints/*
+notebooks/.ipynb_checkpoints/*
 RFSM_python/__pycache__/*
