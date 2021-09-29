@@ -17,9 +17,8 @@ Es recomendable crear un enviroment de conda para realizar la instalación.
 Ejecutaremos las siguientes líneas:
 
 ```python
-conda create --name RFSM
-conda activate RFSM
-conda install -c conda-forge geopandas gdal rasterstats
+conda env create -f RFSM.yml
+conda install scikit-image
 ```
 
 Una vez descargado, desde la terminal iremos al directorio donde se sencuentra __setup.py__ y ejecutaremos la siguiente linea:
