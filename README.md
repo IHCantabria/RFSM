@@ -1,4 +1,5 @@
 # RFSM
+<img src="https://ihcantabria.com/wp-content/uploads/2020/07/Logo-IHCantabria-Universidad-Cantabria-cmyk.png" alt="drawing" width="500"/>
 🌎 Mediante los siguientes códigos podremos ejecutar RFSM y configurar todos los datos de partida.
 El preproceso se ha sustituido por funciones de python por lo que se puede ejecutar en cualquier entorno.
 
