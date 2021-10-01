@@ -317,3 +317,9 @@ def zonal_statistic(raster_mask,raster,statis='sum',only_values=[]):
 
     Statistic = Statistic.T
     return Statistic.loc[:,statis]
+
+
+def matDatenum2PYDatetime(datenumVec,unitTime = 'D'):
+    datetimeVec = pd.to_datetime(datenumVec-719529, unit=unitTime,errors='coerce')
+    datetimeNum = datenumVec-719529
+    return datetimeVec,datetimeNum

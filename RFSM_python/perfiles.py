@@ -4,6 +4,7 @@
 from RFSM_python.utils import *
 from osgeo import ogr
 import math
+from scipy.stats import linregress
 
 
 def _distance(a, b):
@@ -226,7 +227,15 @@ def inpolygon(xq, yq, xv, yv):
     return p.contains_points(q).reshape(shape)
 
 
-def traza_perfiles_linea(xc,yc,SPAC,Ltierra,Lmar,Postierra,plott,path_output):
+def traza_perfiles_linea(linea_costa_suavizada,SPAC,Ltierra,Lmar,Postierra,plott,path_output):
+    
+    ds = gpd.read_file(linea_costa_suavizada)
+    xc = list()
+    yc = list()
+    for i in ds['geometry'][0].coords:
+        xc.append(i[0])
+        yc.append(i[1])
+    
     if len(xc)>1:
         xc=xc
     if len(yc)>1:
@@ -394,7 +403,7 @@ def extract_elevation_perfil(perfiles,topo_bat,epsg,save_csv,plot,save_fig, path
 
         x_y_data = gdf_pcs[['h_distance', 'Elevation']]
         
-        slope.append(linregress(x_y_data.h_distance.values, x_y_data.Elevation.values).slope)
+        slope.append(-linregress(x_y_data.h_distance.values, x_y_data.Elevation.values).slope)
 
         if save_csv==True:
             x_y_data.to_csv(path_output + XS_ID + '.csv' )
@@ -439,7 +448,7 @@ def calculate_mforshore(batimetria, perfile, epsg, path_output):
             bat_mod.loc[i,'geometry'] = LineString(np.stack([x_bat, y_bat, z_bat]).T)
 
         
-        perf['mfor']=0
+        perf['mforePer']=0
         for i, shape in enumerate(perf.index):
             x_bat = list()
             y_bat = list()
@@ -449,15 +458,65 @@ def calculate_mforshore(batimetria, perfile, epsg, path_output):
                 x_bat.append(j.coords[0][0])
                 y_bat.append(j.coords[0][1])
                 z_bat.append(j.coords[0][2])
-            perf.loc[i,'mfor'] = linregress(x_bat, z_bat).slope
+            perf.loc[i,'mforePer'] = -linregress(x_bat, z_bat).slope
         perf.to_file(path_output+'Cross_Sections_mforshore.shp')
         
     elif batimetria.endswith('.tif') or batimetria.endswith('.asc'):
         mforshore = extract_elevation_perfil(perfile,
                      batimetria,epsg,False,False,False, path_output)
-        perf['mfor']=0
-        perf.loc[:,'mfor'] = mforshore
+        perf['mforePer']=0
+        perf.loc[:,'mforePer'] = mforshore
 
         perf.to_file(path_output+'Cross_Sections_mforshore.shp')
+        
+        
+        
+def update_mforeshore_TWL(perfiles,puntos_TWL,EPSG,path_output):
+    import fiona
+    from shapely.geometry import shape, Point, LineString
+    import pyproj
+
+    gpd1 =  gpd.read_file(perfiles)
+    gpd2 = gpd.read_file(puntos_TWL)
+
+    srcProj = pyproj.Proj(init='EPSG:'+str(EPSG))
+    dstProj = pyproj.Proj(init='EPSG:'+str(EPSG))
+
+    path1 = perfiles
+    path2 = puntos_TWL
+
+    points = fiona.open(path2)
+    line = fiona.open(path1)
+
+    points = [ (shape(feat["geometry"]).xy[0][0], shape(feat["geometry"]).xy[1][0]) 
+               for feat in points ]
+
+    lines = [ zip(shape(feat["geometry"]).coords.xy[0], shape(feat["geometry"]).coords.xy[1]) 
+              for feat in line ]
+
+    proj_lines = [ [] for i in range(len(lines)) ]
+
+    for i, item in enumerate(lines):
+        for element in item:
+            x = element[0]
+            y = element[1]
+            x, y = pyproj.transform(srcProj, dstProj, x, y)
+            proj_lines[i].append((x, y))
+
+    proj_points = []
+
+    for point in points:
+        x = point[0]
+        y = point[1]
+        x, y = pyproj.transform(srcProj, dstProj, x, y)    
+        proj_points.append(Point(x,y))
+    gpd2['mforeshore'] = 0
+    for k, point in enumerate(proj_points):
+        distances = []
+        for i, line in enumerate(proj_lines):
+            distances.append(LineString(line).distance(point))
+        gpd2.loc[k,'mforeshore'] = gpd1.loc[np.argmin(distances),'mforePer']
+        
+    gpd2.to_file(path_output+'puntos_TWL_foreshore.shp')
             
     

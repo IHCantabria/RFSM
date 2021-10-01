@@ -63,7 +63,7 @@ def line_cost_raster(raster_file,path_output):
     bandOut = None
     dsOut = None       
 
-def impact_zones_process(path_project,DTM_LC,cellsize,new_coast_Line=True):
+def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Line=True):
     start = time.time()
     izd1_r = path_project+'ascii/check/izid1.asc'
     izd2_r = path_project+'ascii/check/izid2.asc'
@@ -72,8 +72,8 @@ def impact_zones_process(path_project,DTM_LC,cellsize,new_coast_Line=True):
         dtm_lc_asc =  gdal.Open(DTM_LC)
         band = dtm_lc_asc.GetRasterBand(1)
         dtm = BandReadAsArray(band)
-        dtm[dtm<10] = -9999
-        dtm[dtm>=10] = 1
+        dtm[dtm<COTA_ESTUDIO] = -9999
+        dtm[dtm>=COTA_ESTUDIO] = 1
 
         driver = gdal.GetDriverByName("GTiff")
         dsOut = driver.Create(path_project+'ascii/DTM_OC.tif'
