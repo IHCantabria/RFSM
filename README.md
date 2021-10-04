@@ -19,7 +19,7 @@ Ejecutaremos las siguientes líneas:
 
 ```python
 conda env create -f RFSM.yml
-conda install scikit-image
+conda install scikit-image statsmodels
 ```
 
 Una vez descargado, desde la terminal iremos al directorio donde se sencuentra __setup.py__ y ejecutaremos la siguiente linea:
