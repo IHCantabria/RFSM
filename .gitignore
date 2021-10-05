@@ -6,4 +6,6 @@ RFSM.egg-info*
 RFSM_python/.ipynb_checkpoints/*
 RFSM_python/RFSM_funtions-Copy1.py
 notebooks/.ipynb_checkpoints/*
+notebooks/funciones_RFSM.ipynb
+notebooks/Ejecución escenarios RFSM.ipynb
 RFSM_python/__pycache__/*
