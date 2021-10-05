@@ -229,6 +229,22 @@ def inpolygon(xq, yq, xv, yv):
 
 def traza_perfiles_linea(linea_costa_suavizada,SPAC,Ltierra,Lmar,Postierra,plott,path_output):
     
+    """La siguiente función nos permite generar lperfiles a partir de una linea dada.
+    
+       Parámetros:
+       ---------------------
+       linea_costa_suavizada  : file shp. Fichero de la línea de costa suavizada o con menos curvatura
+       SPAC                   : float. separación que se quiere entre perfiles.
+       Ltierra                : float. longitud del perfil desde la linea de costa hacia tierra.
+       Lmar                   : float. longitud del perfil hacia el mar
+       plott                  : True or False.  Si se quiere obtener una figura con los perfiles realizados
+       path_output            : string. Path donde se desea guardar el fichero de las secciones realizadas
+       Salidas:
+       ---------------------
+       File Cross_Sections.shp
+       
+    """
+    
     ds = gpd.read_file(linea_costa_suavizada)
     xc = list()
     yc = list()
@@ -328,6 +344,17 @@ def traza_perfiles_linea(linea_costa_suavizada,SPAC,Ltierra,Lmar,Postierra,plott
     
     
 def correct_perfiles_linea(shape_correct,path_output):
+    """La siguiente función nos permite modificar la tabla de atributos si se ha realizado una corrección en las secciones.
+    
+       Parámetros:
+       ---------------------
+       shape_correct          : file shp. Fichero con las secciones que se han modificado
+       path_output            : string. Path donde se desea guardar el fichero de las secciones realizadas
+       Salidas:
+       ---------------------
+       File Cross_Sections_Final.shp
+       
+    """
     ds = gpd.read_file(shape_correct)
     for i, shape in enumerate(ds['geometry']):
         xon = shape.coords[0][0]
@@ -424,6 +451,20 @@ def extract_elevation_perfil(perfiles,topo_bat,epsg,save_csv,plot,save_fig, path
 
 
 def calculate_mforshore(batimetria, perfile, epsg, path_output):
+    """La siguiente función nos obtener la pendiente de la línea de costa a partir de una batimetría en secciones determinadas.
+    
+       Parámetros:
+       ---------------------
+       batimetria             : file shp o Tif. Fichero de la batimetría
+       perfile                : file shp. Fichero con las secciones a lo largo de la línea de costa
+       epsg                   : int. Código EPSG del sistema de coordenadas con el que se está trabajando
+       path_output            : string.  Path donde se desea guardar el fichero de secciones actualizados con la pendiente. 
+       Salidas:
+       ---------------------
+       File Cross_Sections_mforshore.shp
+       
+    """
+    
     from scipy.stats import linregress
     
     perf = gpd.read_file(perfile)
@@ -472,6 +513,19 @@ def calculate_mforshore(batimetria, perfile, epsg, path_output):
         
         
 def update_mforeshore_TWL(perfiles,puntos_TWL,EPSG,path_output):
+    """La siguiente función permite asignar la pendiente del perfil más cercano a los puntos donde se calcula el TWL.
+    
+       Parámetros:
+       ---------------------
+       perfiles               : file shp o Tif. Fichero con los perfiles de la línea de costa
+       puntos_TWL             : file shp. Fichero con los puntos de TWL
+       epsg                   : int. Código EPSG del sistema de coordenadas con el que se está trabajando
+       path_output            : string.  Path donde se desea guardar el fichero de secciones actualizados con la pendiente. 
+       Salidas:
+       ---------------------
+       File puntos_TWL_foreshore.shp
+       
+    """
     import fiona
     from shapely.geometry import shape, Point, LineString
     import pyproj

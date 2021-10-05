@@ -64,6 +64,24 @@ def line_cost_raster(raster_file,path_output):
     dsOut = None       
 
 def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Line=True):
+    """ La siguiente función nos permite generar las tablas de ipact zones e identificar las lineas de la costa que serán codición de contorno.
+        A continuación se explican cada uno de los parámetros de entrada necesarios y los outputs generados
+        
+        Parámetros:
+        ---------------------
+        path_project            : string. path donde se encuentran las carpetas de RFSM para el caso de estudio.
+        DTM_LC                  : string. MDT al cual se le han eliminado la zona de mar.
+        cellsize                : int. Tamaño de celda del MDT.
+        COTA_ESTUDIO            : int. Cota a la que se desea cortar el terreno considerada inundable.
+        new_coast_Line          : True or False. En el caso en el que se haya modificado la izid2 no es necesario volver a generar la línea de costa, en ese caso poner en False
+       
+        Salidas:
+        ---------------------
+        Table_impact_zone       : dataframe. Tabla de impact zones
+        izcoast                 : dataframe. Tabla de impact zones identificadas como costa.
+        Files csv de las impact zones y de las impact zones identificadas como impact zone de las costa.
+    
+    """
     start = time.time()
     izd1_r = path_project+'ascii/check/izid1.asc'
     izd2_r = path_project+'ascii/check/izid2.asc'
@@ -162,6 +180,23 @@ def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Lin
     return Table_impact_zone, izcoast
 
 def izcoast_modify(path_project,izcoast_shp,izcoast_table,output):
+    """ La siguiente función nos permite generar las tablas de ipact zones e identificar las lineas de la costa que serán codición de contorno.
+        A continuación se explican cada uno de los parámetros de entrada necesarios y los outputs generados
+        
+        Parámetros:
+        ---------------------
+        path_project            : string. path donde se encuentran las carpetas de RFSM para el caso de estudio.
+        izcoast_shp             : string. path donde se encuentra el shape de izcoast modificado-
+        izcoast_table           : dataframe. Tabla de izcoast.
+        output                  : string. path con el nombre del fichero de la tabla de izcoast modificada.
+        
+        Salidas:
+        ---------------------
+        Table_impact_zone       : dataframe. Tabla de impact zones
+        izcoast                 : dataframe. Tabla de impact zones identificadas como costa.
+        Files csv de las impact zones y de las impact zones identificadas como impact zone de las costa.
+    
+    """
     izcoast_table_=pd.read_csv(izcoast_table,index_col=0)
     iz_shp=gpd.read_file(izcoast_shp)
     izcoast=izcoast_table_.loc[iz_shp.loc[:,'IZID'].values,:].copy()

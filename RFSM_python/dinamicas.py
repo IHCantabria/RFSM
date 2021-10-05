@@ -30,6 +30,21 @@ sns.set(); sns.set_context('notebook')
 
 
 def create_netcf_Dinamicas_DOW(path_files,path_output,model,scenario):
+       """La siguiente función permite transformar los ficheros de dinámicas de Matlab en ficheros NETCDF
+    
+       Parámetros:
+       ---------------------
+       path_files             : string. Directorio donde se encuentra las carpetas con los ficheros en cada punto de dinámicas
+       path_output            : string. separación que se quiere entre perfiles.
+       model                  : string. nombre del modelo de cambio climático en el caso en que se esté realizando el estudio, en cualquier otro caso se pondrá DOW
+       scenario               : string. nombre del escenario que se esté estudiando, histórico RCP 4.5 o RCP 8.5
+       
+       Salidas:
+       ---------------------
+       File                   : netcdf. fichero netcdf
+       
+       """
+    
     directory = list() 
     for file in os.listdir(path_files):
         if file.startswith("Punto"):
@@ -119,6 +134,18 @@ def create_netcf_Dinamicas_DOW(path_files,path_output,model,scenario):
     
     
 def create_netcf_MareaAst(path_files,path_output):
+           """La siguiente función permite transformar los ficheros de marea astronómica de Matlab en ficheros NETCDF
+    
+       Parámetros:
+       ---------------------
+       path_files             : string. Directorio donde se encuentra las carpetas con los ficheros en cada punto de dinámicas
+       path_output            : string. separación que se quiere entre perfiles.
+       
+       Salidas:
+       ---------------------
+       File                   : netcdf. fichero netcdf
+       
+       """
     directory = list() 
     for file in os.listdir(path_files):
         if file.startswith("Punto"):
@@ -208,6 +235,18 @@ def create_netcf_MareaAst(path_files,path_output):
     
     
 def create_netcf_Dinamicas_SLR(path_files,path_output):
+       """La siguiente función permite transformar los ficheros de SLR de Matlab en ficheros NETCDF
+    
+       Parámetros:
+       ---------------------
+       path_files             : string. Directorio donde se encuentra las carpetas con los ficheros en cada punto de dinámicas
+       path_output            : string. separación que se quiere entre perfiles.
+      
+       Salidas:
+       ---------------------
+       File                   : netcdf. fichero netcdf
+       
+       """
     directory = list() 
     for file in os.listdir(path_files):
         if file.startswith("Punto"):
