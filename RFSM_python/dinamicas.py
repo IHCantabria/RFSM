@@ -38,26 +38,32 @@ def create_netcf_Dinamicas_DOW(path_files,path_output,model,scenario):
     lon = list()
     lat = list()
     for d, dd in enumerate(directory):
-        names_point.append(dd[:-19])
-        lon.append(float(dd[-17:-10]))
-        lat.append(float(dd[-8:-1]))
+        names_point.append(dd.split('[')[0][:-1])
+        lon.append(float(dd.split('[')[2][:-1]))
+        lat.append(float(dd.split('[')[1][:-1]))
         
     for i,ii in enumerate(tqdm.tqdm(directory)):
         if i ==0:
-            mat    = scipy.io.loadmat(path_files+directory[i]+'/'+directory[i]+'_'+model+'_'+scenario+'.mat')
-            time   = mat['time'].flatten()
-            hs_o   = mat['hs'].reshape(1,-1)
-            tps_o  = mat['tps'].reshape(1,-1)
-            dir_o  = mat['dir'].reshape(1,-1)
-            zeta_o = mat['zeta'].reshape(1,-1)
-            tm02_o = mat['tm02'].reshape(1,-1)
+            try:
+                mat    = scipy.io.loadmat(path_files+directory[i]+'/'+directory[i]+'_'+model+'_'+scenario+'.mat')
+                time   = mat['time'].flatten()
+                hs_o   = mat['hs'].reshape(1,-1)
+                tps_o  = mat['tps'].reshape(1,-1)
+                dir_o  = mat['dir'].reshape(1,-1)
+                zeta_o = mat['zeta'].reshape(1,-1)
+                tm02_o = mat['tm02'].reshape(1,-1)
+            except:
+                print('Fallo en el fichero '+ ii)
         else:
-            mat = scipy.io.loadmat(path_files+directory[i]+'/'+directory[i]+'_'+model+'_'+scenario+'.mat')
-            hs_o   = np.concatenate((hs_o, mat['hs'].reshape(1,-1)), axis=0)
-            tps_o  = np.concatenate((tps_o, mat['tps'].reshape(1,-1)), axis=0)
-            dir_o  = np.concatenate((dir_o, mat['dir'].reshape(1,-1)), axis=0)
-            zeta_o = np.concatenate((zeta_o, mat['zeta'].reshape(1,-1)), axis=0)
-            tm02_o = np.concatenate((tm02_o, mat['tm02'].reshape(1,-1)), axis=0)
+            try:
+                mat = scipy.io.loadmat(path_files+directory[i]+'/'+directory[i]+'_'+model+'_'+scenario+'.mat')
+                hs_o   = np.concatenate((hs_o, mat['hs'].reshape(1,-1)), axis=0)
+                tps_o  = np.concatenate((tps_o, mat['tps'].reshape(1,-1)), axis=0)
+                dir_o  = np.concatenate((dir_o, mat['dir'].reshape(1,-1)), axis=0)
+                zeta_o = np.concatenate((zeta_o, mat['zeta'].reshape(1,-1)), axis=0)
+                tm02_o = np.concatenate((tm02_o, mat['tm02'].reshape(1,-1)), axis=0)
+            except:
+                print('Fallo en el fichero '+ ii)
         
     time_py = matDatenum2PYDatetime(time,unitTime = 'D')[0]
     
@@ -65,20 +71,20 @@ def create_netcf_Dinamicas_DOW(path_files,path_output,model,scenario):
     # Global Attributes 
     nc.description= 'Contiene las dinámicas del modelo '+model+' en el escenario '+scenario  
     # nc dimensions
-    nc.createDimension('lon',  len(lon))
-    nc.createDimension('lat',  len(lat))
+    #nc.createDimension('lon',  len(lon))
+    #nc.createDimension('lat',  len(lat))
     nc.createDimension('time',len(time))
-    #nc.createDimension('point',len(names_point))
+    nc.createDimension('point',len(names_point))
     # crear variables
-    xx_nc=nc.createVariable('lon','float32', ('lon'))
-    yy_nc=nc.createVariable('lat','float32', ('lat'))
+    xx_nc=nc.createVariable('lon','float32', ('point'))
+    yy_nc=nc.createVariable('lat','float32', ('point'))
     time_nc=nc.createVariable('time','float32',('time'))
-    #point_nc = nc.createVariable('point','int',('point'))
-    hs_nc=nc.createVariable('hs','float32', ('time','lon'))
-    tps_nc=nc.createVariable('tps','float32', ('time','lon'))
-    dir_nc=nc.createVariable('dir','float32', ('time','lon'))
-    zeta_nc=nc.createVariable('zeta','float32', ('time','lon'))
-    tm02_nc=nc.createVariable('tm02','float32', ('time','lon'))
+    point_nc = nc.createVariable('point','int',('point'))
+    hs_nc=nc.createVariable('hs','float32', ('time','point'))
+    tps_nc=nc.createVariable('tps','float32', ('time','point'))
+    dir_nc=nc.createVariable('dir','float32', ('time','point'))
+    zeta_nc=nc.createVariable('zeta','float32', ('time','point'))
+    tm02_nc=nc.createVariable('tm02','float32', ('time','point'))
     #units
     xx_nc.units = 'degrees_east'
     yy_nc.units = 'degrees_north'
@@ -100,7 +106,7 @@ def create_netcf_Dinamicas_DOW(path_files,path_output,model,scenario):
     # calendar
     time_nc.calendar = 'standard'
     # rellenar variables
-    #point_nc[:]=np.arange(1,len(names_point)+1)
+    point_nc[:]=np.arange(1,len(names_point)+1)
     xx_nc[:]=lon
     yy_nc[:]=lat
     time_nc[:]=date2num(time_py.to_pydatetime(), units='days since '+str(time_py[0].year)+'-01-01', calendar='standard')
@@ -121,46 +127,52 @@ def create_netcf_MareaAst(path_files,path_output):
     lon = list()
     lat = list()
     for d, dd in enumerate(directory):
-        names_point.append(dd[:-23])
-        lon.append(float(dd[-21:-14]))
-        lat.append(float(dd[-12:-5]))
+        names_point.append(dd.split('[')[0][:-1])
+        lon.append(float(dd.split('[')[2][:-5]))
+        lat.append(float(dd.split('[')[1][:-1]))
         
     for i,ii in enumerate(tqdm.tqdm(directory)):
         if i ==0:
-            mat    = scipy.io.loadmat(path_files+directory[i])
-            time   = mat['time'].flatten()
-            lon_tide_o = mat['lon_tide']
-            lat_tide_o = mat['lat_tide']
-            tide_o  = mat['tide'].reshape(1,-1)
-            u_o  = mat['u'].reshape(1,-1)
-            v_o  = mat['v'].reshape(1,-1)
+            try:
+                mat    = scipy.io.loadmat(path_files+directory[i])
+                time   = mat['time'].flatten()
+                lon_tide_o = mat['lon_tide']
+                lat_tide_o = mat['lat_tide']
+                tide_o  = mat['tide'].reshape(1,-1)
+                u_o  = mat['u'].reshape(1,-1)
+                v_o  = mat['v'].reshape(1,-1)
+            except:
+                print('Fallo en el fichero '+ ii)
         else:
-            mat    = scipy.io.loadmat(path_files+directory[i])
-            tide_o  =  np.concatenate((tide_o,mat['tide'].reshape(1,-1)),axis=0)
-            lon_tide_o = np.concatenate((lon_tide_o,mat['lon_tide']),axis=0)
-            lat_tide_o = np.concatenate((lat_tide_o,mat['lat_tide']),axis=0)
-            u_o  = np.concatenate((u_o,mat['u'].reshape(1,-1)),axis=0)
-            v_o  = np.concatenate((v_o,mat['v'].reshape(1,-1)),axis=0)
+            try:
+                mat    = scipy.io.loadmat(path_files+directory[i])
+                tide_o  =  np.concatenate((tide_o,mat['tide'].reshape(1,-1)),axis=0)
+                lon_tide_o = np.concatenate((lon_tide_o,mat['lon_tide']),axis=0)
+                lat_tide_o = np.concatenate((lat_tide_o,mat['lat_tide']),axis=0)
+                u_o  = np.concatenate((u_o,mat['u'].reshape(1,-1)),axis=0)
+                v_o  = np.concatenate((v_o,mat['v'].reshape(1,-1)),axis=0)
+            except:
+                print('Fallo en el fichero '+ ii)
         
     time_py = matDatenum2PYDatetime(time,unitTime = 'D')[0]
     nc = Dataset(path_output+'PtosObjtvo_MAT.nc', 'w', format='NETCDF4')
     # Global Attributes 
     nc.description= 'Contiene la variable Marea Astronómica' 
     # nc dimensions
-    nc.createDimension('lon',  len(lon))
-    nc.createDimension('lat',  len(lat))
+    #nc.createDimension('lon',  len(lon))
+    #nc.createDimension('lat',  len(lat))
     nc.createDimension('time',len(time))
-    #nc.createDimension('point',len(names_point))
+    nc.createDimension('point',len(names_point))
     # crear variables
-    xx_nc=nc.createVariable('lon','float32', ('lon'))
-    yy_nc=nc.createVariable('lat','float32', ('lat'))
+    xx_nc=nc.createVariable('lon','float32', ('point'))
+    yy_nc=nc.createVariable('lat','float32', ('point'))
     time_nc=nc.createVariable('time','float32',('time'))
-    lon_tide_nc = nc.createVariable('lon_tide','float32', ('lon'))
-    lat_tide_nc = nc.createVariable('lat_tide','float32', ('lat'))
-    #point_nc = nc.createVariable('point','int',('point'))
-    tide_nc=nc.createVariable('tide','float32', ('time','lon'))
-    u_nc=nc.createVariable('u','float32', ('time','lon'))
-    v_nc=nc.createVariable('v','float32', ('time','lon'))
+    lon_tide_nc = nc.createVariable('lon_tide','float32', ('point'))
+    lat_tide_nc = nc.createVariable('lat_tide','float32', ('point'))
+    point_nc = nc.createVariable('point','int',('point'))
+    tide_nc=nc.createVariable('tide','float32', ('time','point'))
+    u_nc=nc.createVariable('u','float32', ('time','point'))
+    v_nc=nc.createVariable('v','float32', ('time','point'))
     #units
     xx_nc.units = 'degrees_east'
     yy_nc.units = 'degrees_north'
@@ -183,7 +195,7 @@ def create_netcf_MareaAst(path_files,path_output):
     # calendar
     time_nc.calendar = 'standard'
     # rellenar variables
-    #point_nc[:]=np.arange(1,len(names_point)+1)
+    point_nc[:]=np.arange(1,len(names_point)+1)
     xx_nc[:]=lon
     yy_nc[:]=lat
     lon_tide_nc[:] = lon_tide_o
@@ -204,28 +216,34 @@ def create_netcf_Dinamicas_SLR(path_files,path_output):
     lon = list()
     lat = list()
     for d, dd in enumerate(directory):
-        names_point.append(dd[:-27])
-        lon.append(float(dd[-25:-18]))
-        lat.append(float(dd[-16:-9]))
+        names_point.append(dd.split('[')[0][:-1])
+        lon.append(float(dd.split('[')[2][:-1]))
+        lat.append(float(dd.split('[')[1][:-1]))
         
     for i,ii in enumerate(tqdm.tqdm(directory)):
         if i ==0:
-            mat    = scipy.io.loadmat(path_files+directory[i])
-            time   = mat['time'].flatten()
-            m_ensemble45_o  = mat['m_ensemble45'].reshape(1,-1)
-            m_ensemble85_o  = mat['m_ensemble85'].reshape(1,-1)
-            P5_45_o  = mat['P5_45'].reshape(1,-1)
-            P5_85_o  = mat['P5_85'].reshape(1,-1)
-            P95_45_o = mat['P95_45'].reshape(1,-1)
-            P95_85_o = mat['P95_85'].reshape(1,-1)
+            try:
+                mat    = scipy.io.loadmat(path_files+directory[i])
+                time   = mat['time'].flatten()
+                m_ensemble45_o  = mat['m_ensemble45'].reshape(1,-1)
+                m_ensemble85_o  = mat['m_ensemble85'].reshape(1,-1)
+                P5_45_o  = mat['P5_45'].reshape(1,-1)
+                P5_85_o  = mat['P5_85'].reshape(1,-1)
+                P95_45_o = mat['P95_45'].reshape(1,-1)
+                P95_85_o = mat['P95_85'].reshape(1,-1)
+            except:
+                print('Fallo en el fichero '+ ii)
         else:
-            mat = scipy.io.loadmat(path_files+directory[i])
-            m_ensemble45_o   = np.concatenate((m_ensemble45_o, mat['m_ensemble45'].reshape(1,-1)), axis=0)
-            m_ensemble85_o  = np.concatenate((m_ensemble85_o, mat['m_ensemble85'].reshape(1,-1)), axis=0)
-            P5_45_o  = np.concatenate((P5_45_o, mat['P5_45'].reshape(1,-1)), axis=0)
-            P5_85_o  = np.concatenate((P5_85_o, mat['P5_85'].reshape(1,-1)), axis=0)
-            P95_45_o = np.concatenate((P95_45_o, mat['P95_45'].reshape(1,-1)), axis=0)
-            P95_85_o = np.concatenate((P95_85_o, mat['P95_85'].reshape(1,-1)), axis=0)
+            try:
+                mat = scipy.io.loadmat(path_files+directory[i])
+                m_ensemble45_o   = np.concatenate((m_ensemble45_o, mat['m_ensemble45'].reshape(1,-1)), axis=0)
+                m_ensemble85_o  = np.concatenate((m_ensemble85_o, mat['m_ensemble85'].reshape(1,-1)), axis=0)
+                P5_45_o  = np.concatenate((P5_45_o, mat['P5_45'].reshape(1,-1)), axis=0)
+                P5_85_o  = np.concatenate((P5_85_o, mat['P5_85'].reshape(1,-1)), axis=0)
+                P95_45_o = np.concatenate((P95_45_o, mat['P95_45'].reshape(1,-1)), axis=0)
+                P95_85_o = np.concatenate((P95_85_o, mat['P95_85'].reshape(1,-1)), axis=0)
+            except:
+                print('Fallo en el fichero '+ ii)
         
     time_py = matDatenum2PYDatetime(time,unitTime = 'D')[0]
     
@@ -233,21 +251,21 @@ def create_netcf_Dinamicas_SLR(path_files,path_output):
     # Global Attributes 
     nc.description= 'Contiene la variable SLR' 
     # nc dimensions
-    nc.createDimension('lon',  len(lon))
-    nc.createDimension('lat',  len(lat))
+    #nc.createDimension('lon',  len(lon))
+    #nc.createDimension('lat',  len(lat))
     nc.createDimension('time',len(time))
-    #nc.createDimension('point',len(names_point))
+    nc.createDimension('point',len(names_point))
     # crear variables
-    xx_nc=nc.createVariable('lon','float32', ('lon'))
-    yy_nc=nc.createVariable('lat','float32', ('lat'))
+    xx_nc=nc.createVariable('lon','float32', ('point'))
+    yy_nc=nc.createVariable('lat','float32', ('point'))
     time_nc=nc.createVariable('time','float32',('time'))
-    #point_nc = nc.createVariable('point','int',('point'))
-    m_ensemble45_nc=nc.createVariable('m_ensemble45','float32', ('time','lon'))
-    m_ensemble85_nc=nc.createVariable('m_ensemble85','float32', ('time','lon'))
-    P5_45_nc=nc.createVariable('P5_45','float32', ('time','lon'))
-    P5_85_nc=nc.createVariable('P5_85','float32', ('time','lon'))
-    P95_45_nc=nc.createVariable('P95_45','float32', ('time','lon'))
-    P95_85_nc=nc.createVariable('P95_85','float32', ('time','lon'))
+    point_nc = nc.createVariable('point','int',('point'))
+    m_ensemble45_nc=nc.createVariable('m_ensemble45','float32', ('time','point'))
+    m_ensemble85_nc=nc.createVariable('m_ensemble85','float32', ('time','point'))
+    P5_45_nc=nc.createVariable('P5_45','float32', ('time','point'))
+    P5_85_nc=nc.createVariable('P5_85','float32', ('time','point'))
+    P95_45_nc=nc.createVariable('P95_45','float32', ('time','point'))
+    P95_85_nc=nc.createVariable('P95_85','float32', ('time','point'))
     #units
     xx_nc.units = 'degrees_east'
     yy_nc.units = 'degrees_north'
@@ -271,7 +289,7 @@ def create_netcf_Dinamicas_SLR(path_files,path_output):
     # calendar
     time_nc.calendar = 'standard'
     # rellenar variables
-    #point_nc[:]=np.arange(1,len(names_point)+1)
+    point_nc[:]=np.arange(1,len(names_point)+1)
     xx_nc[:]=lon
     yy_nc[:]=lat
     time_nc[:]=date2num(time_py.to_pydatetime(), units='days since '+str(time_py[0].year)+'-01-01', calendar='standard')

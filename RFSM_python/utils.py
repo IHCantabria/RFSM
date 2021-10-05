@@ -33,9 +33,11 @@ gdal.SetConfigOption("GDALWARP_IGNORE_BAD_CUTLINE", "YES")
 from osgeo import ogr
 import math
 
-def make_dirs(path_install_RFSM,path_project,TestDesc,Results):
+def make_dirs_RFSM(path_install_RFSM,path_project):
     if len(os.listdir(path_project))==0:
         copytree(path_install_RFSM, path_project, symlinks=False, ignore=None) ## Cambiar el path donde tenemos la instalación de RFSM
+
+def make_dirs(path_project,TestDesc,Results):
     if os.path.exists(path_project+'tests/'+TestDesc) == False:
         os.mkdir(path_project+'tests/'+TestDesc)
 
@@ -60,8 +62,8 @@ def make_dirs(path_install_RFSM,path_project,TestDesc,Results):
         os.mkdir(path_project+'tests/'+TestDesc+'/log/')
 
     if os.path.exists(path_project+'tests/'+TestDesc+'/Results_'+str(Results)+'/') == False:
-        os.mkdir(path_project+'tests/'+TestDesc+'/Results_'+str(Results)+'/')
-
+        os.mkdir(path_project+'tests/'+TestDesc+'/Results_'+str(Results)+'/')        
+        
 def header_ascii(ascii):
     name = list()
     data = list()
@@ -323,3 +325,34 @@ def matDatenum2PYDatetime(datenumVec,unitTime = 'D'):
     datetimeVec = pd.to_datetime(datenumVec-719529, unit=unitTime,errors='coerce')
     datetimeNum = datenumVec-719529
     return datetimeVec,datetimeNum
+
+def rasterize (shapefile,ID,raster_extent,output):
+    from osgeo import gdal, ogr
+
+    vector_layer = shapefile
+
+    # open the raster layer and get its relevant properties
+    tileHdl = gdal.Open(raster_extent, gdal.GA_ReadOnly)
+
+    tileGeoTransformationParams = tileHdl.GetGeoTransform()
+    projection = tileHdl.GetProjection()
+
+    rasterDriver = gdal.GetDriverByName('GTiff')
+
+    buildingPolys_ds = ogr.Open(vector_layer)
+    buildingPolys = buildingPolys_ds.GetLayer()
+    # Create the destination data source
+    tempSource = rasterDriver.Create(output, 
+                                     tileHdl.RasterXSize, 
+                                     tileHdl.RasterYSize,
+                                     1, #missed parameter (band)
+                                     gdal.GDT_Float32)
+
+    tempSource.SetGeoTransform(tileGeoTransformationParams)
+    tempSource.SetProjection(projection)
+    tempTile = tempSource.GetRasterBand(1)
+    tempTile.Fill(-9999)
+    tempTile.SetNoDataValue(-9999)
+
+    gdal.RasterizeLayer(tempSource, [1], buildingPolys, options=["ATTRIBUTE="+ID])
+    tempSource = None

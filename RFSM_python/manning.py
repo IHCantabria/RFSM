@@ -3,7 +3,7 @@
 
 from RFSM_python.utils import *
 
-def create_file_manning(path_project,raster_rugos,TestDesc,Table_impact_zone):
+def create_file_manning(path_project,raster_rugos,BCSetID,TestDesc,Table_impact_zone):
     tusrlZManning = pd.DataFrame(index=np.arange(0,len(Table_impact_zone)),columns=['BCSetID','IZID','CManning'])
     ZE = zonal_stats(path_project+'shp/izid2.shp',raster_rugos, stats=['mean'],geojson_out=True,included_attributes=['IZID'])
     ZE = json_normalize(ZE)
@@ -16,4 +16,4 @@ def create_file_manning(path_project,raster_rugos,TestDesc,Table_impact_zone):
         except:
             print('Fallo en el IZID:' + str(ii))
             break
-    tusrlZManning.to_csv(path_project+'tests/'+TestDesc+'/Input_User/tusrIZManning.csv',index=False)
+    tusrlZManning.to_csv(path_project+'ascii/tusrIZManning.csv',index=False)

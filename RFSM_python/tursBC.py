@@ -3,39 +3,55 @@
 
 from RFSM_python.utils import *
 
-def tusrBCFlowLevel (poits_x,point_y,path_project,TestDesc,Table_impact_zone,izcoast,n_periods,BCSetID,BCTypeID_COAST,
+def tusrBCFlowLevel(table_points,table_inputs,path_project,TestDesc,Table_impact_zone,
+                     izcoast,BCSetID,BCTypeID_COAST,
                     raw_q=True, point_X_river = None ,point_Y_river = None ,hidrograma=None):
-    import geopandas as gpd
+    
+    """La siguiente función nos permite generar los ficheros de condición de contorno de RFSM.
+    
+       Parámetros:
+       ---------------------
+       table_points       : pandas dataframe. Dataframe con las coordenadas y características de los puntos donde asignaron las dinámicas
+       table_inputs        : pandas dataframe. Dataframe que contiene el temporal reconstruido o hidrograma reconstruido.
+       path_project       : string. path donde se encuentra el proyecto de RFSM
+       TestDesc           : string. Nombre de la simulación
+       Table_impact_zone  : pandas dataframe.  Dataframe con el conjunto de impact zones
+       izcoast            : pandas dataframe.  Dataframe con el conjunto de impact zones donde se asigna condición de contorno costera
+       BCSetID            : int. Identificador de la simulación
+       BCTypeID_COAST     : int. Tipo de condición de contorno # 1 overtopping; # 2 level;
+       raw_q              : True or False: Si existe un punto donde se va introducir un caudal en un cauce poner en True
+       point_X_river      : float. Si existe un punto donde se va introducir un caudal en un cauce añadir 
+       point_Y_river      : float. Si existe un punto donde se va introducir un caudal en un cauce poner en True
+       hidrograma         : array. Si existe un punto donde se va introducir un caudal en un cauce añadir hidrograma 
+       
+        Salidas:
+        ---------------------
+        Fichero tusrBCFlowLevel necesario para la ejecución de RFSM.
+       
+       
+       
+        """
+    
     Table_impact_zone_edit =Table_impact_zone.copy()
     Table_impact_zone_edit.loc[:,'BCTypeID'] = 0
     
-    
-    # % 1 overtopping; 2 level;
-    
-    points_dinamics = pd.read_csv(path_inputs_dinamicas+'Points_Marine_Dynamics_UTM.dat',delim_whitespace=True,
-                                  header=None,
-                                  names=['x coordinate or longitud','y coordinate or latitud','depth of closure','absolute id','relative id'])
-    
-    timeDOW=pd.read_csv(path_inputs_dinamicas+'WAVES/TimeHs.dat',delim_whitespace=True,header=None,dtype=int)
-    timemm=pd.read_csv(path_inputs_dinamicas+'SS/TimeMM.dat',delim_whitespace=True, header=None,dtype=int)
-    timeat=pd.read_csv(path_inputs_dinamicas+'AT/TimeAT.dat',delim_whitespace=True,header=None,dtype=int)
-    
-    timeDOW_index = convert_index_datetime(timeDOW)
-    timemm_index  = convert_index_datetime(timemm)
-    timeat_index  = convert_index_datetime(timeat)
+    table_points = gpd.read_file(table_points)
+   
+    n_periods = len(table_inputs)
     
     Table_impact_zone_edit.loc[izcoast.index,'BCTypeID'] = BCTypeID_COAST
     
     if raw_q==True:
         
         dist = np.sqrt((point_X_river-Table_impact_zone_edit.iloc[:,2])**2+(point_Y_river-Table_impact_zone_edit.iloc[:,3])**2)
-        point_select=dist.idxmin()
+        point_select=np.argmin(dist)
         
         Table_impact_zone_edit.loc[point_select,'BCTypeID'] = 10
         
     Results_TWL = pd.DataFrame(index=np.arange(0,sum(Table_impact_zone_edit.BCTypeID.values>0)*n_periods),columns=['BCSetID', 'BCTypeID', 'IZID', 'Time', 'BCValue'])
     
     Table_impact_zone_edit_2=Table_impact_zone_edit[Table_impact_zone_edit.BCTypeID!=0].copy()
+    
     it=0
     for iDZ in tqdm.tqdm(range(len(Table_impact_zone_edit_2))):
         if (Table_impact_zone_edit_2['BCTypeID'].iloc[iDZ]==2) or (Table_impact_zone_edit_2['BCTypeID'].iloc[iDZ]==1):
@@ -44,49 +60,33 @@ def tusrBCFlowLevel (poits_x,point_y,path_project,TestDesc,Table_impact_zone,izc
             y_pointIZID = Table_impact_zone_edit_2[' MidY'].values[iDZ]
             IZID = Table_impact_zone_edit_2.index[iDZ]
 
-            dist = np.sqrt((x_pointIZID-points_dinamics.iloc[:,0])**2+(y_pointIZID-points_dinamics.iloc[:,1])**2)
-            point_select=dist.idxmin()
-
-            TWL_def = list()
-            W=pd.read_csv(path_inputs_dinamicas  +'WAVES/H_'+str(points_dinamics['relative id'][point_select])+'.dat',delim_whitespace=True,header=None)
-            W.index = timeDOW_index
-            MM=pd.read_csv(path_inputs_dinamicas + 'SS/MM_'+str(points_dinamics['relative id'][point_select])+'.dat',delim_whitespace=True,header=None)
-            MM.index = timemm_index
-            MA=pd.read_csv(path_inputs_dinamicas + 'AT/MA_'+str(points_dinamics['relative id'][point_select])+'.dat',delim_whitespace=True,header=None)
-            MA.index = timeat_index
-
-            Result = pd.concat([W,MM,MA],axis=1).dropna()
-            Hs=Result.iloc[:,0]; T=Result.iloc[:,1]
-            setup=0.05*T*(Hs)**(1/2)
-            MM=Result.iloc[:,3]
-            MA=Result.iloc[:,4]
-            TWL=MM+MA+setup
+            dist = np.sqrt((x_pointIZID-table_points.CX.values)**2+(y_pointIZID-table_points.CY.values)**2)
+            point_select=np.argmin(dist)
+            
+            cITr = table_inputs.iloc[:,point_select].values
+            
             if BCTypeID_COAST ==1:
-                TWL = TWL*izcoast.nCells[IZID]*cellsize
+                cITr = cITr*izcoast.nCells[IZID]*cellsize
             else:
-                TWL = TWL-izcoast.minH[IZID]
-                TWL[TWL<0]=0
-            MaximumTWL=np.where(TWL==np.max(TWL))[0]
-            TWL_def = list()
-            for n in range(int(-(n_periods-1)/2),int((n_periods-1)/2+1)):
-                TWL_def.append(TWL.iloc[MaximumTWL+n].values[0])
-
+                cITr = cITr-izcoast.minH[IZID]
+                cITr[cITr<0]=0
+                
+            
             Results_TWL.iloc[it:it+n_periods,0] = BCSetID
             Results_TWL.iloc[it:it+n_periods,1] = BCTypeID_COAST
             Results_TWL.iloc[it:it+n_periods,2] = IZID
-            Results_TWL.iloc[it:it+n_periods,3] = np.linspace(0,3600*n_periods,n_periods)
-            Results_TWL.iloc[it:it+n_periods,4] = TWL_def
+            Results_TWL.iloc[it:it+n_periods,3] = np.linspace(0,3600*len(cITr),len(cITr))
+            Results_TWL.iloc[it:it+n_periods,4] = cITr
 
             it=it+n_periods
 
-            del W, MM, MA, Hs, setup, TWL
-
         elif Table_impact_zone_edit_2['BCTypeID'].iloc[iDZ]==10:
+            hidrograma = table_inputs.values
             print('Río')
             Results_TWL.iloc[it:it+n_periods,0] = BCSetID
             Results_TWL.iloc[it:it+n_periods,1] = 1
             Results_TWL.iloc[it:it+n_periods,2] = IZID
-            Results_TWL.iloc[it:it+n_periods,3] = np.linspace(0,3600*n_periods,n_periods)
+            Results_TWL.iloc[it:it+n_periods,3] = np.linspace(0,3600*len(hidrograma),len(hidrograma))
             Results_TWL.iloc[it:it+n_periods,4] = hidrograma
 
             it=it+n_periods
