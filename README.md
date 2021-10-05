@@ -8,7 +8,7 @@ El preproceso se ha sustituido por funciones de python por lo que se puede ejecu
 Contiene el código del modelo RFSM junto con los scripts en python que permiten realizar el preproceso y ejecución del modelo.
 | Directorio | Contenidos |
 | :--------: | ------- |
-| [python](RFSM_python) | Las siguientes funciones permiten tanto la configuración como ejecución del modelo, además de obtener los resultados una vez ejecutado el modelo.<br> <br> [ExportTIF.py](./RFSM_python/ExportTIF.py) fichero ejecutable que permite covertir los resultados de RFSM en formato TIF lo que permite reducir notablemente el tiempo de cómputo  <br> [mosaic_TIF.py](./RFSM_python/mosaic_TIF.py) fichero ejecutable que permite realizar la unión de los resultados de todas las mallas de configuración del modelo. |
+| [python](RFSM_python) | Las funciones contenidas en esta carpeta permiten tanto la configuración como ejecución del modelo, además de obtener los resultados una vez ejecutado el modelo.<br>|
 | [exe](https://github.com/IHCantabria/RFSM/tree/master/RFSM_python) | Debido a que diversos usuarios usan Matlab y haber tenido diferentes problemas con la instalación de python, se ha compilado todo el dódigo para ejecutar los ficheros [ExportTIF.py](./RFSM_python/ExportTIF.py) y [mosaic_TIF.py](./RFSM_python/mosaic_TIF.py) desde la terminal o desde el propio Matlab.|
 | [notebooks](notebooks) | contiene un ejemplo en el que se relizan diferentes procesos para simular un caso determinado.|                                                                                                                                                            
 
