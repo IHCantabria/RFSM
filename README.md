@@ -8,9 +8,8 @@ El preproceso se ha sustituido por funciones de python por lo que se puede ejecu
 Contiene el código del modelo RFSM junto con los scripts en python que permiten realizar el preproceso y ejecución del modelo.
 | Directorio | Contenidos |
 | :--------: | ------- |
-| [python](https://github.com/IHCantabria/RFSM/tree/master/RFSM_python) | Las siguientes funciones permiten tanto la configuración como ejecución del modelo, además de obtener los resultados una vez ejecutado el modelo.<br> [RFSM_Ejecution.py](https://github.com/IHCantabria/RFSM/blob/master/RFSM_python/RFSM_funtions.py) contiene las funciones en python para realizar el preproceso, la configuración y la ejecución del modelo. Este fichero permite instalar todas las funciones a través de pip. <br> [ExportTIF.py](https://github.com/IHCantabria/RFSM/blob/master/RFSM_python/ExportTIF.py) fichero ejecutable que permite covertir los resultados de RFSM en formato TIF lo que permite reducir notablemente el tiempo de cómputo  <br> [mosaic_TIF.py](https://github.com/IHCantabria/RFSM/blob/master/RFSM_python/mosaic_TIF.py) fichero ejecutable que permite realizar la unión de los resultados de todas las mallas de configuración del modelo. |
-| [exe](https://github.com/IHCantabria/RFSM/tree/master/RFSM_python) | Debido a que diversos usuarios usan Matlab y haber tenido diferentes problemas con la instalación de python, se ha compilado todo el dódigo para ejecutar los ficheros [ExportTIF.py](https://github.com/IHCantabria/RFSM/blob/master/RFSM_python/ExportTIF.py) y [mosaic_TIF.py](https://github.com/IHCantabria/RFSM/blob/master/RFSM_python/mosaic_TIF.py) desde la terminal o desde el propio Matlab.|
-| [notebooks](https://github.com/IHCantabria/RFSM/tree/master/notebooks) | contiene un ejemplo en el que se relizan diferentes procesos para simular un caso determinado.|                                                                                                                                                            
+| [python](RFSM_python) | Las funciones contenidas en esta carpeta permiten tanto la configuración como ejecución del modelo, además de obtener los resultados una vez ejecutado el modelo.<br>|
+| [notebooks](notebooks) | contiene un ejemplo en el que se relizan diferentes procesos para simular un caso determinado.|                                                                                                                                                            
 
 ## Instalación
 Para realizar la instalación de la librería es necesario descargar y descomprimir el fichero.
@@ -32,7 +31,7 @@ De esta forma ya estará instalada la librería
 ## Ejemplos
 A continuación se muestran diferentes ejemplos de ejecución del modelo a través de los métodos comentados anteriormente.
 ### Ejemplo 1
-Para las ejecuciones ejecutadas de python se utilizará como ejemplo el notebook [RFSM-Example.ipynb](https://github.com/IHCantabria/RFSM/tree/master/notebooks/RFSM-Example.ipynb)
+Para las ejecuciones ejecutadas de python se utilizará como ejemplo el notebook [RFSM-Example.ipynb](./notebooks/RFSM-Example.ipynb)
 
 ### Ejemplo 2
 Para el uso de los ficheros compilados a través de Matlab se utilizarán la siguientes líneas. Es necesario que los ficheros .exe se encuentren en el mismo directorio en el que se esté ejecutando el código de Matlab.
