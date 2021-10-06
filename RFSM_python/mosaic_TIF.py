@@ -835,7 +835,7 @@ def mosaic_tifs(path_isla, src):
         #os.popen(command2).read()
         
         
-if __name__== "__main__":
+#if __name__== "__main__":
     # 1 path_project
     # 2 SRC
-     mosaic_tifs(sys.argv[1],sys.argv[2])
+    # mosaic_tifs(sys.argv[1],sys.argv[2])

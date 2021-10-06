@@ -4,6 +4,15 @@
 from RFSM_python.utils import *
 
 def execute_RFSM(path_project,TestDesc,TestID):
+    """La siguiente función lanzar la ejecución de RFSM
+
+    Parámetros:
+    ---------------------
+    path_project           : string. Directorio donde se encuentra las carpetas de configuración de RFSM
+    TestDesc               : string. Nombre de la simulación
+    TestID                 : int. ID de la simulación
+
+    """
     os.chdir(path_project+'tests/'+TestDesc+'/Input_xml/')
     try:
         test = os.uname()
@@ -14,7 +23,21 @@ def execute_RFSM(path_project,TestDesc,TestID):
         os.system(path_project+'bin/RFSM/Windows7_x86/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')
 
 
-def export_result_RFSM(path_project,TestDesc,Results):
+def export_result_RFSM(path_project,TestDesc,Results,src):
+    """La siguiente función permite transformar los ficheros de SLR de Matlab en ficheros NETCDF
+
+    Parámetros:
+    ---------------------
+    path_project           : string. Directorio donde se encuentra las carpetas de configuración de RFSM
+    TestDesc               : string. Nombre de la simulación
+    TestID                 : int. ID de la simulación
+    Results                : string. Número de la simulación y número de la carpeta donde se guardan los resultados en csv
+    
+    Salidas:
+    ---------------------
+    File                   : tif. fichero tif de resultados
+
+    """
     path_results = path_project + 'tests/'+TestDesc+'/Results_'+str(Results)+'/'
     tusrResultsIZMax = pd.read_csv(path_results+'tusrResultsIZMax.csv',index_col=1)
     shape_IZID2 = gpd.read_file(path_project+'shp/izid2.shp')
@@ -46,7 +69,7 @@ def export_result_RFSM(path_project,TestDesc,Results):
     
     #Write the out file
     driver = gdal.GetDriverByName("GTiff")
-    dsOut = driver.Create(path_project + 'tests/'+TestDesc+'/export/MaxLevel'+str(Results)+'.tif'
+    dsOut = driver.Create(path_project + 'tests/'+TestDesc+'/export/MaxLevel_'+TestDesc+'.tif'
                           , mdt_tif.RasterXSize, mdt_tif.RasterYSize, 1, band1.DataType)
     CopyDatasetInfo(mdt_tif,dsOut)
     bandOut=dsOut.GetRasterBand(1)
@@ -62,3 +85,5 @@ def export_result_RFSM(path_project,TestDesc,Results):
     level_tif = None
     bandOut = None
     dsOut = None
+    
+    gdal_edit((" -stats -a_srs EPSG:"+str(src)+" -a_nodata -9999 " + path_project + 'tests/'+TestDesc+'/export/MaxLevel_'+TestDesc+'.tif').split(" "))

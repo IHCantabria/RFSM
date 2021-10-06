@@ -459,8 +459,6 @@ def export_result_RFSM(path_project,TestDesc,Results,src):
     bandOut = None
     dsOut = None
     
-    gdal_edit((" -stats -a_srs EPSG:"+str(src)+" -a_nodata -9999 " + path_project + 'tests/'+TestDesc+'/'+TestDesc+'.tif').split(" "))
-    
     
     
 if __name__== "__main__":
