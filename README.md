@@ -19,7 +19,8 @@ Ejecutaremos las siguientes líneas:
 ```python
 conda env create -f RFSM.yml
 conda install scikit-image statsmodels seaborn
-conda install -c conda-forge pyproj gmaps
+conda install -c conda-forge pyproj gmaps nodejs
+jupyter nbextension enable --py --sys-prefix gmaps
 ```
 
 Una vez descargado, desde la terminal iremos al directorio donde se sencuentra __setup.py__ y ejecutaremos la siguiente linea:
