@@ -110,12 +110,12 @@ def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Lin
         bandOut = None
         dsOut = None
         
-        os.system('gdal_polygonize.py '+path_project+'ascii/DTM_OC.tif'+' '+path_project+'shp/DTM_OC.shp -b 1 -f "ESRI Shapefile" DTM_OC IZID')
+        gdal_polygonize(path_project+'ascii/DTM_OC.tif'+' '+path_project+'shp/DTM_OC.shp -b 1 -f "ESRI Shapefile" DTM_OC IZID')
         
     
     
-    os.system('gdal_polygonize.py '+izd1_r+' '+path_project+'shp/izid1.shp -b 1 -f "ESRI Shapefile" izid1 IZID')
-    os.system('gdal_polygonize.py '+izd2_r+' '+path_project+'shp/izid2.shp -b 1 -f "ESRI Shapefile" izid2 IZID')
+    gdal_polygonize(izd1_r+' '+path_project+'shp/izid1.shp -b 1 -f "ESRI Shapefile" izid1 IZID')
+    gdal_polygonize(izd2_r+' '+path_project+'shp/izid2.shp -b 1 -f "ESRI Shapefile" izid2 IZID')
     
     izd1 = path_project+'shp/izid1.shp'
     izd2 = path_project+'shp/izid2.shp'
@@ -142,7 +142,7 @@ def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Lin
     extract_coastline(path_project+'shp/Final_cut_complet_F.shp',DTM_LC,path_project+'ascii/DTM_LC_2.tif', cellsize)
         
     line_cost_raster(path_project+'ascii/DTM_LC_2.tif',path_project+'ascii/')
-    os.system('gdal_polygonize.py '+path_project+'ascii/coast.tif'+' '+path_project+'shp/coast_IH.shp -b 1 -f "ESRI Shapefile" coast_IH CID')
+    gdal_polygonize(path_project+'ascii/coast.tif'+' '+path_project+'shp/coast_IH.shp -b 1 -f "ESRI Shapefile" coast_IH CID')
       
     
     ds = ogr.Open(path_project+'shp/coast_IH.shp')

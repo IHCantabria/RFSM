@@ -5,6 +5,5 @@ RFSM.egg-info*
 RFSM_python/.ipynb_checkpoints/*
 RFSM_python/RFSM_funtions-Copy1.py
 notebooks/.ipynb_checkpoints/*
-notebooks/KML/*
 others/*
 RFSM_python/__pycache__/*

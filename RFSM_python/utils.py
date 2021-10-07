@@ -34,6 +34,12 @@ from osgeo.gdalnumeric import *
 from osgeo.gdalconst import *
 #from pyproj import _datadir, datadir
 from fiona import _shim, schema
+import os.path
+import sys
+import subprocess
+import shlex
+import json  # json is an easy way to send arbitrary ascii-safe lists of strings out of python
+
 gdal.SetConfigOption("GDALWARP_IGNORE_BAD_CUTLINE", "YES")
 
 from osgeo import ogr
@@ -1264,3 +1270,265 @@ def gdal_edit(argv):
     ds = band = None
 
     return 0
+
+
+
+
+def shell_split(cmd):
+    """
+    Like `shlex.split`, but uses the Windows splitting syntax when run on Windows.
+
+    On windows, this is the inverse of subprocess.list2cmdline
+    """
+    if os.name == 'posix':
+        return shlex.split(cmd)
+    else:
+        # TODO: write a version of this that doesn't invoke a subprocess
+        if not cmd:
+            return []
+        full_cmd = '{} {}'.format(
+            subprocess.list2cmdline([
+                sys.executable, '-c',
+                'import sys, json; print(json.dumps(sys.argv[1:]))'
+            ]), cmd
+        )
+        ret = subprocess.check_output(full_cmd).decode()
+        return json.loads(ret)
+
+def gdal_polygonize (argv):
+
+    def Usage():
+        print("""
+    gdal_polygonize [-8] [-nomask] [-mask filename] raster_file [-b band|mask]
+                    [-q] [-f ogr_format] out_file [layer] [fieldname]
+    """)
+        sys.exit(1)
+
+
+    def DoesDriverHandleExtension(drv, ext):
+        exts = drv.GetMetadataItem(gdal.DMD_EXTENSIONS)
+        return exts is not None and exts.lower().find(ext.lower()) >= 0
+
+
+    def GetExtension(filename):
+        ext = os.path.splitext(filename)[1]
+        if ext.startswith('.'):
+            ext = ext[1:]
+        return ext
+
+
+    def GetOutputDriversFor(filename):
+        drv_list = []
+        ext = GetExtension(filename)
+        for i in range(gdal.GetDriverCount()):
+            drv = gdal.GetDriver(i)
+            if (drv.GetMetadataItem(gdal.DCAP_CREATE) is not None or
+                drv.GetMetadataItem(gdal.DCAP_CREATECOPY) is not None) and \
+               drv.GetMetadataItem(gdal.DCAP_VECTOR) is not None:
+                if len(ext) > 0 and DoesDriverHandleExtension(drv, ext):
+                    drv_list.append(drv.ShortName)
+                else:
+                    prefix = drv.GetMetadataItem(gdal.DMD_CONNECTION_PREFIX)
+                    if prefix is not None and filename.lower().startswith(prefix.lower()):
+                        drv_list.append(drv.ShortName)
+
+        return drv_list
+
+
+    def GetOutputDriverFor(filename):
+        drv_list = GetOutputDriversFor(filename)
+        if len(drv_list) == 0:
+            ext = GetExtension(filename)
+            if len(ext) == 0:
+                return 'ESRI Shapefile'
+            else:
+                raise Exception("Cannot guess driver for %s" % filename)
+        elif len(drv_list) > 1:
+            print("Several drivers matching %s extension. Using %s" % (ext, drv_list[0]))
+        return drv_list[0]
+
+    # =============================================================================
+    # 	Mainline
+    # =============================================================================
+
+
+    format = None
+    options = []
+    quiet_flag = 0
+    src_filename = None
+    src_band_n = 1
+
+    dst_filename = None
+    dst_layername = None
+    dst_fieldname = None
+    dst_field = -1
+
+    mask = 'default'
+
+    gdal.AllRegister()
+    #argv = gdal.GeneralCmdLineProcessor(argv)
+    argv = shell_split(argv)
+    if argv is None:
+        sys.exit(0)
+
+    # Parse command line arguments.
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+
+        if arg == '-f' or arg == '-of':
+            i = i + 1
+            format = argv[i]
+
+        elif arg == '-q' or arg == '-quiet':
+            quiet_flag = 1
+
+        elif arg == '-8':
+            options.append('8CONNECTED=8')
+
+        elif arg == '-nomask':
+            mask = 'none'
+
+        elif arg == '-mask':
+            i = i + 1
+            mask = argv[i]
+
+        elif arg == '-b':
+            i = i + 1
+            if argv[i].startswith('mask'):
+                src_band_n = argv[i]
+            else:
+                src_band_n = int(argv[i])
+
+        elif src_filename is None:
+            src_filename = argv[i]
+
+        elif dst_filename is None:
+            dst_filename = argv[i]
+
+        elif dst_layername is None:
+            dst_layername = argv[i]
+
+        elif dst_fieldname is None:
+            dst_fieldname = argv[i]
+
+        else:
+            Usage()
+
+        i = i + 1
+
+    if src_filename is None or dst_filename is None:
+        Usage()
+
+    if format is None:
+        format = GetOutputDriverFor(dst_filename)
+
+    if dst_layername is None:
+        dst_layername = 'out'
+
+    # =============================================================================
+    # 	Verify we have next gen bindings with the polygonize method.
+    # =============================================================================
+    try:
+        gdal.Polygonize
+    except AttributeError:
+        print('')
+        print('gdal.Polygonize() not available.  You are likely using "old gen"')
+        print('bindings or an older version of the next gen bindings.')
+        print('')
+        sys.exit(1)
+
+    # =============================================================================
+    # Open source file
+    # =============================================================================
+
+    src_ds = gdal.Open(src_filename)
+
+    if src_ds is None:
+        print('Unable to open %s' % src_filename)
+        sys.exit(1)
+
+    if src_band_n == 'mask':
+        srcband = src_ds.GetRasterBand(1).GetMaskBand()
+        # Workaround the fact that most source bands have no dataset attached
+        options.append('DATASET_FOR_GEOREF=' + src_filename)
+    elif isinstance(src_band_n, str) and src_band_n.startswith('mask,'):
+        srcband = src_ds.GetRasterBand(int(src_band_n[len('mask,'):])).GetMaskBand()
+        # Workaround the fact that most source bands have no dataset attached
+        options.append('DATASET_FOR_GEOREF=' + src_filename)
+    else:
+        srcband = src_ds.GetRasterBand(src_band_n)
+
+    if mask is 'default':
+        maskband = srcband.GetMaskBand()
+    elif mask is 'none':
+        maskband = None
+    else:
+        mask_ds = gdal.Open(mask)
+        maskband = mask_ds.GetRasterBand(1)
+
+    # =============================================================================
+    #       Try opening the destination file as an existing file.
+    # =============================================================================
+
+    try:
+        gdal.PushErrorHandler('CPLQuietErrorHandler')
+        dst_ds = ogr.Open(dst_filename, update=1)
+        gdal.PopErrorHandler()
+    except:
+        dst_ds = None
+
+    # =============================================================================
+    # 	Create output file.
+    # =============================================================================
+    if dst_ds is None:
+        drv = ogr.GetDriverByName(format)
+        if not quiet_flag:
+            print('Creating output %s of format %s.' % (dst_filename, format))
+        dst_ds = drv.CreateDataSource(dst_filename)
+
+    # =============================================================================
+    #       Find or create destination layer.
+    # =============================================================================
+    try:
+        dst_layer = dst_ds.GetLayerByName(dst_layername)
+    except:
+        dst_layer = None
+
+    if dst_layer is None:
+
+        srs = None
+        if src_ds.GetProjectionRef() != '':
+            srs = osr.SpatialReference()
+            srs.ImportFromWkt(src_ds.GetProjectionRef())
+
+        dst_layer = dst_ds.CreateLayer(dst_layername, geom_type=ogr.wkbPolygon, srs=srs)
+
+        if dst_fieldname is None:
+            dst_fieldname = 'DN'
+
+        fd = ogr.FieldDefn(dst_fieldname, ogr.OFTInteger)
+        dst_layer.CreateField(fd)
+        dst_field = 0
+    else:
+        if dst_fieldname is not None:
+            dst_field = dst_layer.GetLayerDefn().GetFieldIndex(dst_fieldname)
+            if dst_field < 0:
+                print("Warning: cannot find field '%s' in layer '%s'" % (dst_fieldname, dst_layername))
+
+    # =============================================================================
+    # Invoke algorithm.
+    # =============================================================================
+
+    if quiet_flag:
+        prog_func = None
+    else:
+        prog_func = gdal.TermProgress_nocb
+
+    result = gdal.Polygonize(srcband, maskband, dst_layer, dst_field, options,
+                             callback=prog_func)
+
+    srcband = None
+    src_ds = None
+    dst_ds = None
+    mask_ds = None
