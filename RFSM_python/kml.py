@@ -3236,21 +3236,19 @@ def multi_threaded_tiling(input_file: str, output_folder: str, options: Options)
     shutil.rmtree(os.path.dirname(conf.src_file))
 
 
-def gdal2tiles(argv: List[str]) -> int:
+def gdal2tiles(argv):
     # TODO: gbataille - use mkdtemp to work in a temp directory
     # TODO: gbataille - debug intermediate tiles.vrt not produced anymore?
     # TODO: gbataille - Refactor generate overview tiles to not depend on self variables
 
     # For multiprocessing, we need to propagate the configuration options to
     # the environment, so that forked processes can inherit them.
-    for i in range(len(argv)):
-        if argv[i] == '--config' and i + 2 < len(argv):
-            os.environ[argv[i+1]] = argv[i+2]
-
     argv = shell_split(argv)
+
+    
     if argv is None:
         return 0
-    input_file, output_folder, options = process_args(argv[1:])
+    input_file, output_folder, options = process_args(argv)
     nb_processes = options.nb_processes or 1
 
     if nb_processes == 1:
