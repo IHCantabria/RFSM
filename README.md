@@ -9,7 +9,9 @@ Contiene el código del modelo RFSM junto con los scripts en python que permiten
 | Directorio | Contenidos |
 | :--------: | ------- |
 | [python](RFSM_python) | Las funciones contenidas en esta carpeta permiten tanto la configuración como ejecución del modelo, además de obtener los resultados una vez ejecutado el modelo.<br>|
-| [notebooks](notebooks) | contiene un ejemplo en el que se relizan diferentes procesos para simular un caso determinado.|                                                                                                                                                            
+| [notebooks](notebooks) | Contiene un ejemplo en el que se relizan diferentes procesos para simular un caso determinado.<br>|  
+| [compile](compile) | En esta carpeta se encuentran los ficheros **.py** que se compilaron para ejecutar desde Matlab. En el *supporting material* de este directorio se encuentran los ficheros ya compilados.<br>| 
+| [doc](doc) | En esta carpeta se encuentran los artículos de interés.<br>| 
 
 ## Instalación
 Para realizar la instalación de la librería es necesario descargar y descomprimir el fichero.
