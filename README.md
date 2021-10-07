@@ -59,11 +59,12 @@ path_project = 'Directorio donde se encuentra el proyecto'
 str  = ['mosaic_TIF.exe ',path_project];
 system(str);
 ```
-## Referencias 
+# Referencias 
 <a id="1">[1]</a> 
 Gomes da Silva, P., Coco, G., Garnier, R., & Klein, A. H. F. (2020). 
 On the prediction of runup, setup and swash on beaches. 
 Earth-Science Reviews, 204(February), 103148. https://doi.org/10.1016/j.earscirev.2020.103148.
 
-
+# License
+Copyright 2021 Instituto de Hidráulica Ambiental "IHCantabria". Universidad de Cantabria.
 
