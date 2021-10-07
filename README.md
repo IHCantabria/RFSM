@@ -62,7 +62,10 @@ system(str);
 ```
 # Referencias 
 ---
-bibliography: [References.bib]
+<a id="1">[1]</a> 
+Gomes da Silva, P., Coco, G., Garnier, R., & Klein, A. H. F. (2020). 
+On the prediction of runup, setup and swash on beaches. 
+Earth-Science Reviews, 204(February), 103148. https://doi.org/10.1016/j.earscirev.2020.103148.
 ---
 
 
