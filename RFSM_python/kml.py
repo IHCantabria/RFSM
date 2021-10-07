@@ -3247,7 +3247,7 @@ def gdal2tiles(argv: List[str]) -> int:
         if argv[i] == '--config' and i + 2 < len(argv):
             os.environ[argv[i+1]] = argv[i+2]
 
-    argv = gdal.GeneralCmdLineProcessor(argv)
+    argv = shell_split(argv)
     if argv is None:
         return 0
     input_file, output_folder, options = process_args(argv[1:])
