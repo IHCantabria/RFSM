@@ -62,7 +62,7 @@ system(str);
 ```
 # Referencias 
 ---
-bibliography: References.bib]
+bibliography: [References.bib]
 ---
 
 
