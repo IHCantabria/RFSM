@@ -60,7 +60,7 @@ path_project = 'Directorio donde se encuentra el proyecto'
 str  = ['mosaic_TIF.exe ',path_project];
 system(str);
 ```
-# Referencias 
+## Referencias 
 ---
 <a id="1">[1]</a> 
 Gomes da Silva, P., Coco, G., Garnier, R., & Klein, A. H. F. (2020). 
