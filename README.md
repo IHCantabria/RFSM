@@ -35,7 +35,7 @@ A continuación se muestran diferentes ejemplos de ejecución del modelo a trav�
 ### Ejemplo 1
 Para las ejecuciones ejecutadas de python se utilizará como ejemplo el notebook [RFSM-Example.ipynb](./notebooks/RFSM-Example.ipynb)
 
-El material necesario puede ser descargado a través de la cuenta de UNICAN en: [RFSM Github] (https://unican-my.sharepoint.com/:f:/g/personal/navass_unican_es/Eo43HV8hgUNIsaz4yF_VZVYBsv5YMVO5Zapo4Qdb8GoIeA?e=xA1bAq)
+El material necesario puede ser descargado a través de la cuenta de UNICAN en: [RFSM Github](https://unican-my.sharepoint.com/:f:/g/personal/navass_unican_es/Eo43HV8hgUNIsaz4yF_VZVYBsv5YMVO5Zapo4Qdb8GoIeA?e=xA1bAq)
 
 ### Ejemplo 2
 Para el uso de los ficheros compilados a través de Matlab se utilizarán la siguientes líneas. Es necesario que los ficheros .exe se encuentren en el mismo directorio en el que se esté ejecutando el código de Matlab.
