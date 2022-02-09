@@ -19,7 +19,7 @@ Ejecutaremos las siguientes líneas:
 
 ```python
 conda env create -f RFSM.yml
-conda create --name RFSM --channel=conda-forge geopandas cartopy shapely gdal xarray netcdf4 hadf5 libgdal jupyterlab scikit-image statsmodels seaborn tqdm osgeo pyproj fiona rasterio rasterstats
+conda create --name RFSM --channel=conda-forge geopandas cartopy shapely gdal xarray netcdf4 hdf5 libgdal jupyterlab scikit-image statsmodels seaborn tqdm pyproj fiona rasterio rasterstats
 ```
 
 Una vez descargado, desde la terminal iremos al directorio donde se sencuentra __setup.py__ y ejecutaremos la siguiente linea:
