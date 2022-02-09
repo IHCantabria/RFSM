@@ -19,12 +19,14 @@ Ejecutaremos las siguientes líneas:
 
 ```python
 conda env create -f RFSM.yml
-conda install scikit-image statsmodels seaborn
+conda create --name RFSM --channel=conda-forge geopandas cartopy shapely gdal xarray netcdf4 hadf5 libgdal jupyterlab scikit-image statsmodels seaborn tqdm osgeo pyproj fiona rasterio rasterstats
 ```
 
 Una vez descargado, desde la terminal iremos al directorio donde se sencuentra __setup.py__ y ejecutaremos la siguiente linea:
 
 ```python
+
+
 pip install -e.
 ```
 De esta forma ya estará instalada la librería
