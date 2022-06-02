@@ -1532,3 +1532,23 @@ def gdal_polygonize (argv):
     src_ds = None
     dst_ds = None
     mask_ds = None
+    
+    
+def createBuffer(inputfn, outputBufferfn, bufferDist):
+    inputds = ogr.Open(inputfn)
+    inputlyr = inputds.GetLayer()
+
+    shpdriver = ogr.GetDriverByName('ESRI Shapefile')
+    if os.path.exists(outputBufferfn):
+        shpdriver.DeleteDataSource(outputBufferfn)
+    outputBufferds = shpdriver.CreateDataSource(outputBufferfn)
+    bufferlyr = outputBufferds.CreateLayer(outputBufferfn, geom_type=ogr.wkbPolygon)
+    featureDefn = bufferlyr.GetLayerDefn()
+
+    for feature in inputlyr:
+        ingeom = feature.GetGeometryRef()
+        geomBuffer = ingeom.Buffer(bufferDist)
+
+        outFeature = ogr.Feature(featureDefn)
+        outFeature.SetGeometry(geomBuffer)
+        bufferlyr.CreateFeature(outFeature)

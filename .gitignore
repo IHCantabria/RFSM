@@ -7,3 +7,7 @@ RFSM_python/RFSM_funtions-Copy1.py
 notebooks/.ipynb_checkpoints/*
 others/*
 RFSM_python/__pycache__/*
+notebooks/RFSM-Example.ipynb
+*.bak
+notebooks/RFSM-Example.ipynb
+*.ipynb

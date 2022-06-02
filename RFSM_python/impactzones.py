@@ -18,15 +18,22 @@ def extract_coastline(shp_coastline,path_DTM,path_DTM_new, cellsize):
                         dstNodata = -9999)
 
     OutTile = None 
+    
 
 
 
-def line_cost_raster(raster_file,path_output):
+def line_cost_raster(raster_file,raster_coast_line,path_output):
+
+    raster_CL = gdal.Open(raster_coast_line)
+    band0 = raster_CL.GetRasterBand(1)
+    data0 = BandReadAsArray(band0)
+    data0[data0>=0]= 1
+
     raster = gdal.Open(raster_file)
     band = raster.GetRasterBand(1)
     data = BandReadAsArray(band)
-    data[data>=0]= 1
-    data[data<0]= 0
+    data[data0==1]= 1
+    data[data0!=1]= 0
 
     from skimage.segmentation import find_boundaries
     data_2 = data.copy()*0+-9999
@@ -137,12 +144,20 @@ def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Lin
     FC = explode(path_project+'shp/Final_cut_complet.shp')
     FC = FC.geometry.apply(lambda p: close_holes(p))
     FC.to_file(path_project+'shp/Final_cut_complet_F.shp')
-    
-    
+
     extract_coastline(path_project+'shp/Final_cut_complet_F.shp',DTM_LC,path_project+'ascii/DTM_LC_2.tif', cellsize)
+    rasterize (path_project+'shp/Final_cut_complet_F.shp','FID',path_project+'ascii/DTM_LC_2.tif',path_project+'ascii/CL_ras.tif')
         
-    line_cost_raster(path_project+'ascii/DTM_LC_2.tif',path_project+'ascii/')
+    line_cost_raster(path_project+'ascii/DTM_LC_2.tif',path_project+'ascii/CL_ras.tif',path_project+'ascii/')
     gdal_polygonize(path_project+'ascii/coast.tif'+' '+path_project+'shp/coast_IH.shp -b 1 -f "ESRI Shapefile" coast_IH CID')
+    
+#     createBuffer(path_project+'shp/Final_cut_complet.shp', path_project+'shp/Final_cut_Buffer.shp', cellsize)
+    
+#     fb_A = gpd.read_file(path_project+'shp/coast_for_buff.shp')
+#     fb_B = gpd.read_file(path_project+'shp/coastline_Buffer.shp')
+    
+#     buffer_inters=gpd.sjoin(fb_A,fb_B , op='intersects')
+#     buffer_inters.to_file(path_project+'shp/coast_IH.shp')
       
     
     ds = ogr.Open(path_project+'shp/coast_IH.shp')
