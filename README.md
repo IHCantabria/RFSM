@@ -65,6 +65,11 @@ path_project = 'Directorio donde se encuentra el proyecto'
 str  = ['mosaic_TIF.exe ',path_project];
 system(str);
 ```
+Si se está trabajando en equipos con sistema operativo LInux
+```Matlab
+str  = ['MosaicTIF-Unix ',path_project];
+```
+
 # Referencias 
 <a id="1">[1]</a> 
 Gomes da Silva, P., Coco, G., Garnier, R., & Klein, A. H. F. (2020). 
