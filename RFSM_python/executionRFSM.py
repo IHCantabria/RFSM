@@ -17,13 +17,13 @@ def execute_RFSM(path_project,TestDesc,TestID):
     try:
         test = os.uname()
         if test[0] == "Linux":
-            os.system(path_project+'bin/RFSM/Windows7_x86/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')
+            os.system('wine '+path_project+'/bin/RFSM/unix/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')
     except AttributeError:
         print("Assuming windows!")
         os.system(path_project+'bin/RFSM/Windows7_x86/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')
 
 
-def export_result_RFSM(path_project,TestDesc,Results,src):
+def export_result_RFSM(path_project,TestDesc,topography,Results,src):
     """La siguiente función permite transformar los ficheros de SLR de Matlab en ficheros NETCDF
 
     Parámetros:
@@ -43,6 +43,12 @@ def export_result_RFSM(path_project,TestDesc,Results,src):
     shape_IZID2 = gpd.read_file(path_project+'shp/izid2.shp')
     shape_IZID2['Level'] = np.nan
     
+    if os.path.exists(path_project+'ascii/topography.tif')==False:
+        ds = gdal.Open(topography)
+        ds = gdal.Translate(path_project+'ascii/topography.tif', ds)
+        ds = None
+        gdal_edit((" -stats -a_srs EPSG:"+str(src)+" -a_nodata -9999 " +path_project+'ascii/topography.tif').split(" "))
+    
     for IDZ in tqdm.tqdm(tusrResultsIZMax.index):
         posi_IDZ = np.where(shape_IZID2.IZID==IDZ)[0][0]
         shape_IZID2.iloc[posi_IDZ,-1] = tusrResultsIZMax.loc[IDZ,'MaxLevel']
@@ -50,40 +56,52 @@ def export_result_RFSM(path_project,TestDesc,Results,src):
     
     rasterize (path_project+'shp/izid2_Level.shp',
                'Level',
-               path_project+'ascii/topography.asc',
+               path_project+'ascii/topography.tif',
                path_project + 'tests/'+TestDesc+'/export/Result_Level_IZID'+str(Results)+'.tif' )
-    mdt_tif = gdal.Open(path_project+'ascii/topography.asc', GA_ReadOnly )
-    band1 = mdt_tif.GetRasterBand(1)
-    mdt = BandReadAsArray(band1)
+               
+    gdal_edit((" -stats -a_srs EPSG:"+str(src)+" -a_nodata -9999 " + path_project + 'tests/'+TestDesc+'/export/Result_Level_IZID'+str(Results)+'.tif').split(" "))
+#     mdt_tif = gdal.Open(path_project+'ascii/topography.asc', GA_ReadOnly )
+#     band1 = mdt_tif.GetRasterBand(1)
+#     mdt = BandReadAsArray(band1)
     
-    level_tif =  gdal.Open(path_project + 'tests/'+TestDesc+'/export/Result_Level_IZID'+str(Results)+'.tif')
-    band2 = level_tif.GetRasterBand(1)
-    level = BandReadAsArray(band2)
-    
-    
-    MaxLevel_new = level - mdt
-    pos_level_neg = np.where(MaxLevel_new<0.001)
-    MaxLevel_new[pos_level_neg[0],pos_level_neg[1]] =-9999
-    MaxLevel_new[np.isnan(MaxLevel_new)] = -9999
+#     level_tif =  gdal.Open(path_project + 'tests/'+TestDesc+'/export/Result_Level_IZID'+str(Results)+'.tif')
+#     band2 = level_tif.GetRasterBand(1)
+#     level = BandReadAsArray(band2)
     
     
-    #Write the out file
-    driver = gdal.GetDriverByName("GTiff")
-    dsOut = driver.Create(path_project + 'tests/'+TestDesc+'/export/MaxLevel_'+TestDesc+'.tif'
-                          , mdt_tif.RasterXSize, mdt_tif.RasterYSize, 1, band1.DataType)
-    CopyDatasetInfo(mdt_tif,dsOut)
-    bandOut=dsOut.GetRasterBand(1)
-    bandOut.Fill(-9999)
-    bandOut.SetNoDataValue(-9999)
-    BandWriteArray(bandOut, MaxLevel_new)
+#     MaxLevel_new = level - mdt
+#     pos_level_neg = np.where(MaxLevel_new<0.001)
+#     MaxLevel_new[pos_level_neg[0],pos_level_neg[1]] =-9999
+#     MaxLevel_new[np.isnan(MaxLevel_new)] = -9999
+    
+    
+#     # Write the out file
+#     driver = gdal.GetDriverByName("GTiff")
+#     dsOut = driver.Create(path_project + 'tests/'+TestDesc+'/export/MaxLevel_'+TestDesc+'.tif'
+#                          , mdt_tif.RasterXSize, mdt_tif.RasterYSize, 1, band1.DataType)
+#     CopyDatasetInfo(mdt_tif,dsOut)
+#     bandOut=dsOut.GetRasterBand(1)
+#     bandOut.Fill(-9999)
+#     bandOut.SetNoDataValue(-9999)
+#     BandWriteArray(bandOut, MaxLevel_new)
 
-    #Close the datasets
-    mdt_tif = None
-    band1 = None
-    band2 = None
-    mdt_tif = None
-    level_tif = None
-    bandOut = None
-    dsOut = None
+#     # Close the datasets
+#     mdt_tif = None
+#     band1 = None
+#     band2 = None
+#     mdt_tif = None
+#     level_tif = None
+#     bandOut = None
+#     dsOut = None
+    
+    A = path_project+'ascii/topography.tif'
+    B = path_project + 'tests/'+TestDesc+'/export/Result_Level_IZID'+str(Results)+'.tif' 
+    R = path_project + 'tests/'+TestDesc+'/export/MaxLevel_'+TestDesc+'_init.tif'
+    R_2 = path_project + 'tests/'+TestDesc+'/export/MaxLevel_'+TestDesc+'.tif'
+    
+    gdal_calcc((' -A '+A+' -B '+B+' --outfile='+R+' --calc="B-A"').split(" "))
+    os.remove(B)
+    gdal_calcc((' -A '+R+' --outfile='+R_2+' --calc="numpy.where(A<0.001,-9999,A)" --NoDataValue=-9999').split(" "))
+    os.remove(R)
     
     gdal_edit((" -stats -a_srs EPSG:"+str(src)+" -a_nodata -9999 " + path_project + 'tests/'+TestDesc+'/export/MaxLevel_'+TestDesc+'.tif').split(" "))

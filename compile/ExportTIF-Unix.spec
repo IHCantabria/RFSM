@@ -1,4 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
+# conda create --name CANAL --channel=conda-forge python=3.7 geopandas gdal xarray netcdf4 pysimplegui pyinstaller cartopy pysheds tqdm rasterio fiona 
+# conda install seaborn openpyxl svglib
+# pip install hydroeval patool
 import os
 from PyInstaller.utils.hooks import collect_data_files # this is very helpful
 from PyInstaller.utils.hooks import collect_dynamic_libs
@@ -37,27 +40,15 @@ block_cipher = None
 # caveat emptor
 
 
-rasterio_imports_paths = glob.glob(r'C:\Anaconda3\envs\CANAL_FIN\Lib\site-packages\rasterio\*.py')
+rasterio_imports_paths = glob.glob('/home/salva/anaconda3/CANAL/Lib/site-packages/rasterio/*.py')
 rasterio_imports = ['rasterio._shim']
-
-sklearn_imports_paths = glob.glob(r'C:\Anaconda3\envs\CANAL_FIN\Lib\site-packages\sklearn\*.py')
-sklearn_imports = ['sklearn.utils._typedefs','sklearn.neighbors._partition_nodes']
-
-sklearnex_imports_paths = glob.glob(r'C:\Anaconda3\envs\CANAL_FIN\Lib\site-packages\sklearnex\*.py')
-sklearnex_imports = []
-
-patoolib_imports_paths = glob.glob(r'C:\Anaconda3\envs\CANAL_FIN\Lib\site-packages\patoolib\*.py')
-patoolib_imports = ['patoolib.programs','patoolib.programs.tar','patoolib.programs.p7zip','patoolib.programs.unrar','patoolib.programs.rar']
-
-
-
 
 for item in rasterio_imports_paths:
     current_module_filename = os.path.split(item)[-1]
     current_module_filename = 'rasterio.'+current_module_filename.replace('.py', '')
     rasterio_imports.append(current_module_filename)
-	
-
+    
+    
 _osgeo_pyds = collect_data_files('osgeo', include_py_files=True)
 _osgeo_pyds = _osgeo_pyds + collect_data_files('fiona', include_py_files=True)
 _osgeo_pyds = _osgeo_pyds + collect_data_files('rasterio', include_py_files=True)
@@ -68,21 +59,16 @@ for p, lib in _osgeo_pyds:
 		osgeo_pyds.append((p, '.'))
 
 
-binaries = osgeo_pyds+[
-    (os.path.join(bins,'geos.dll'), '.'),
-    (os.path.join(bins,'geos_c.dll'), '.'),
-    (os.path.join(bins,'spatialindex_c-64.dll'), '.'),
-    (os.path.join(bins,'spatialindex-64.dll'),'.'),
-]
+binaries = osgeo_pyds
+
 
 a = Analysis(['ExportTIF.py'],
-         pathex=['E:/GitHub/RFSM/compile'], # add all your paths
+         pathex=['/mnt/Proyectos/RFSM/compile'], # add all your paths
          binaries=binaries, # add the dlls you may need
-         datas=collect_data_files('geopandas', subdir='datasets')+collect_dynamic_libs('rtree'), #this is the important bit for your particular error message
+         datas = collect_dynamic_libs('rtree'), #this is the important bit for your particular error message
          hiddenimports=rasterio_imports, # double tap
-         hookspath=[],
+		 hookspath=[],
          runtime_hooks=[],
-         excludes=[],
 		 win_no_prefer_redirects=False,
          win_private_assemblies=False,
 		 cipher=block_cipher,
@@ -96,7 +82,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='ExportTIF',
+          name='ExportTIF-Unix',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
