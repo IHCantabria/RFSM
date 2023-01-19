@@ -43,7 +43,7 @@ El material necesario puede ser descargado a través de la cuenta de UNICAN en: 
 Generalmente se usa matlab para la ejecución de RFSM, por lo que se han compilado diversos procesos que permiten mejorar el rendimiento en la obtención de las manchas de inundación y juntar todos los resultados de diversas mallas para un evento determinado en un mismo raster.
 Para el uso de los ficheros compilados a través de Matlab se utilizarán la siguientes líneas. Es necesario que los ficheros .exe (**para windows**) o -Unix (**para Linux**) se encuentren en el mismo directorio en el que se esté ejecutando el código de Matlab.
 
-Los ejecutables pueden descargarse en el siguiente enlace: https://github.com/IHCantabria/RFSM/releases/download/v1.0.1/
+Los ejecutables pueden descargarse en el siguiente enlace: [Releases](https://github.com/IHCantabria/RFSM/releases/tag/v1.0.1)
 
 Cuando se quiere exportar los resultados que se han obtenido con RFSM a raster, se puede utilizar la siguiente expresión una vez ha acabado la simulación
 ```Matlab
