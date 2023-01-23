@@ -141,7 +141,8 @@ def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Lin
     result_2.to_file(path_project+'shp/Final_cut_complet.shp')
 
     FC = gpd.read_file(path_project+'shp/Final_cut_complet.shp')
-    FC = explode(path_project+'shp/Final_cut_complet.shp')
+    #FC = explode(path_project+'shp/Final_cut_complet.shp')
+    FC = FC.explode(ignore_index=True)
     FC = FC.geometry.apply(lambda p: close_holes(p))
     FC.to_file(path_project+'shp/Final_cut_complet_F.shp')
 
@@ -181,7 +182,7 @@ def impact_zones_process(path_project,DTM_LC,cellsize,COTA_ESTUDIO,new_coast_Lin
     izcoast=Table_impact_zone.loc[fc_intersect,:].loc[:,[' NbCells',' MinLevel',' MidX',' MidY']].copy()
     izcoast.columns=['nCells','minH','MidX','MidY']
     ZE = zonal_stats(path_project+'shp/izcoast.shp',
-                     path_project+'ascii/coast_Line.tif', 
+                     path_project+'ascii/coast_line.tif', 
                      stats=['sum'],
                      geojson_out=True,included_attributes=['IZID'])
     ZE = json_normalize(ZE)

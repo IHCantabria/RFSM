@@ -11,3 +11,9 @@ notebooks/RFSM-Example.ipynb
 *.bak
 notebooks/RFSM-Example.ipynb
 *.ipynb
+docker/start-singleuser.sh
+docker/start-notebook.sh
+docker/README.md
+docker/jupyter_server_config.py
+docker/Dockerfile
+docker/.dockerignore
