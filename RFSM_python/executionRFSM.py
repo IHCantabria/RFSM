@@ -17,7 +17,7 @@ def execute_RFSM(path_project,TestDesc,TestID):
     try:
         test = os.uname()
         if test[0] == "Linux":
-            os.system('wine '+path_project+'/bin/RFSM/unix/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')
+            os.system('wine '+path_project+'/bin/RFSM/Windows7_x86/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')
     except AttributeError:
         print("Assuming windows!")
         os.system(path_project+'bin/RFSM/Windows7_x86/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')

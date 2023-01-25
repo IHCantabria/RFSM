@@ -17,3 +17,4 @@ docker/README.md
 docker/jupyter_server_config.py
 docker/Dockerfile
 docker/.dockerignore
+docker/wine.sh
