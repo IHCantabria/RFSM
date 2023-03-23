@@ -23,7 +23,7 @@ def execute_RFSM(path_project,TestDesc,TestID):
         os.system(path_project+'bin/RFSM/Windows7_x86/RFSM_Hydrodynamic.exe '+'input_'+str(TestID)+'.xml')
 
 
-def export_result_RFSM(path_project,TestDesc,topography,Results,src):
+def export_result_RFSM(path_project,TestDesc,Results,src):
     """La siguiente función permite transformar los ficheros de SLR de Matlab en ficheros NETCDF
 
     Parámetros:

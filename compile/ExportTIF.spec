@@ -75,7 +75,7 @@ binaries = osgeo_pyds+[
     (os.path.join(bins,'spatialindex-64.dll'),'.'),
 ]
 
-a = Analysis(['ExportTIF.py'],
+a = Analysis(['ExportTIF_2.py'],
          pathex=['E:/GitHub/RFSM/compile'], # add all your paths
          binaries=binaries, # add the dlls you may need
          datas=collect_data_files('geopandas', subdir='datasets')+collect_dynamic_libs('rtree'), #this is the important bit for your particular error message

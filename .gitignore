@@ -18,3 +18,17 @@ docker/jupyter_server_config.py
 docker/Dockerfile
 docker/.dockerignore
 docker/wine.sh
+compile/build/ExportTIF/Analysis-00.toc
+compile/build/ExportTIF/base_library.zip
+compile/build/ExportTIF/EXE-00.toc
+compile/build/ExportTIF/ExportTIF.exe.manifest
+compile/build/ExportTIF/ExportTIF.pkg
+compile/build/ExportTIF/PKG-00.toc
+compile/build/ExportTIF/PYZ-00.pyz
+compile/build/ExportTIF/PYZ-00.toc
+compile/build/ExportTIF/Tree-00.toc
+compile/build/ExportTIF/Tree-01.toc
+compile/build/ExportTIF/Tree-02.toc
+compile/build/ExportTIF/warn-ExportTIF.txt
+compile/build/ExportTIF/xref-ExportTIF.html
+compile/dist/ExportTIF.exe
